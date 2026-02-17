@@ -46,9 +46,15 @@ class FirebaseService {
     return !kIsWeb && Platform.isWindows;
   }
 
+  bool get _preferRestRead {
+    // Фолбэк для iOS/Android: если Firebase нативно не поднялся
+    // (например, отсутствует GoogleService-Info.plist), все равно читаем контент по REST.
+    return _preferRestOnDesktop || _firestore == null;
+  }
+
   // Categories
   Stream<List<Category>> getCategoriesStream() {
-    if (_preferRestOnDesktop) {
+    if (_preferRestRead) {
       return Stream<int>.periodic(const Duration(seconds: 2), (i) => i)
           .asyncMap<List<Category>>((_) => getCategories())
           .distinct((a, b) => listEquals(a, b));
@@ -67,7 +73,7 @@ class FirebaseService {
   }
 
   Future<List<Category>> getCategories() async {
-    if (_preferRestOnDesktop) {
+    if (_preferRestRead) {
       final docs = await FirestoreRestService.listCollectionDocs('categories');
       return docs
           .map((m) => Category.fromFirestore(m, (m['id'] as String?) ?? ''))
@@ -117,7 +123,7 @@ class FirebaseService {
 
   // Animals
   Stream<List<Animal>> getAnimalsStream(String categoryId) {
-    if (_preferRestOnDesktop) {
+    if (_preferRestRead) {
       return Stream<int>.periodic(const Duration(seconds: 2), (i) => i)
           .asyncMap<List<Animal>>((_) => getAnimals(categoryId))
           .distinct((a, b) => listEquals(a, b));
@@ -138,7 +144,7 @@ class FirebaseService {
   }
 
   Future<List<Animal>> getAnimals(String categoryId) async {
-    if (_preferRestOnDesktop) {
+    if (_preferRestRead) {
       final docs = await FirestoreRestService.listCollectionDocs('categories/$categoryId/animals');
       return docs
           .map((m) => Animal.fromFirestore(m, (m['id'] as String?) ?? '', categoryId))
@@ -200,7 +206,7 @@ class FirebaseService {
   }
 
   Future<List<ParentalTest>> getParentalTests() async {
-    if (_preferRestOnDesktop) {
+    if (_preferRestRead) {
       final docs = await FirestoreRestService.listCollectionDocs('parental_tests');
       return docs
           .map((m) => ParentalTest.fromFirestore(m, (m['id'] as String?) ?? ''))
