@@ -23,22 +23,24 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   static const String _avatarBasePath = r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img';
+  static const String _repoImgBaseUrl =
+      'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
   static const String _heroImagePrimaryPath =
       r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Главная пикча.png';
   static const String _heroImageFallbackPath =
-      r'C:\Users\1\.cursor\projects\c-Users-1-Desktop-cursor-detiiosjivotnie\assets\c__Users_1_Desktop_cursor_detiiosjivotnie_img______________.png';
+      '$_repoImgBaseUrl/%D0%93%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F%20%D0%BF%D0%B8%D0%BA%D1%87%D0%B0.png';
   static const String _headerPetsPrimaryPath =
       r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Frame 43.png';
   static const String _headerPetsFallbackPath =
-      r'C:\Users\1\.cursor\projects\c-Users-1-Desktop-cursor-detiiosjivotnie\assets\c__Users_1_Desktop_cursor_detiiosjivotnie_img_Frame_43.png';
+      '$_repoImgBaseUrl/Frame%2043.png';
   static const String _profileIconPrimaryPath =
       r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Icon.png';
   static const String _profileIconFallbackPath =
-      r'C:\Users\1\.cursor\projects\c-Users-1-Desktop-cursor-detiiosjivotnie\assets\c__Users_1_Desktop_cursor_detiiosjivotnie_img_Icon.png';
+      '$_repoImgBaseUrl/Icon.png';
   static const String _lockVectorPrimaryPath =
       r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Vector (2).png';
   static const String _lockVectorFallbackPath =
-      r'C:\Users\1\.cursor\projects\c-Users-1-Desktop-cursor-detiiosjivotnie\assets\c__Users_1_Desktop_cursor_detiiosjivotnie_img_Vector__2_.png';
+      '$_repoImgBaseUrl/Vector%20%282%29.png';
 
   static const Map<String, String> _animalAvatarByKey = {
     'кот': 'Frame 50.png',
@@ -93,21 +95,30 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   String? _avatarPathForAnimal(Animal animal) {
+    String remoteByFileName(String fileName) =>
+        '$_repoImgBaseUrl/${Uri.encodeComponent(fileName)}';
+
     final value = animal.name.ru.toLowerCase();
 
     // Важно: "Белая мышь" содержит подстроку "мыш", поэтому даем приоритет.
     if (value.contains('бел') && value.contains('мыш')) {
-      const path = '$_avatarBasePath\\Frame 58.png';
+      const fileName = 'Frame 58.png';
+      const path = '$_avatarBasePath\\$fileName';
       if (File(path).existsSync()) {
         return path;
       }
+      return remoteByFileName(fileName);
     }
 
     final entries = _animalAvatarByKey.entries.toList()
       ..sort((a, b) => b.key.length.compareTo(a.key.length));
     for (final entry in entries) {
       if (value.contains(entry.key)) {
-        return '$_avatarBasePath\\${entry.value}';
+        final localPath = '$_avatarBasePath\\${entry.value}';
+        if (File(localPath).existsSync()) {
+          return localPath;
+        }
+        return remoteByFileName(entry.value);
       }
     }
     return null;
@@ -124,6 +135,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   String? _firstExistingPath(List<String> paths) {
     for (final path in paths) {
+      if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+      }
       if (File(path).existsSync()) {
         return path;
       }
@@ -189,14 +203,24 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         border: Border.all(color: const Color(0xFF2475C8), width: 2),
       ),
       alignment: Alignment.center,
-      child: lockPath != null
-          ? Image.file(
-              File(lockPath),
-              width: 14,
-              height: 14,
-              fit: BoxFit.contain,
-            )
-          : const Icon(Icons.lock, size: 12, color: Color(0xFF2C74CF)),
+      child: lockPath == null
+          ? const Icon(Icons.lock, size: 12, color: Color(0xFF2C74CF))
+          : lockPath.startsWith('http://') || lockPath.startsWith('https://')
+              ? CachedNetworkImage(
+                  imageUrl: lockPath,
+                  width: 14,
+                  height: 14,
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) => const SizedBox.shrink(),
+                  errorWidget: (context, url, error) =>
+                      const Icon(Icons.lock, size: 12, color: Color(0xFF2C74CF)),
+                )
+              : Image.file(
+                  File(lockPath),
+                  width: 14,
+                  height: 14,
+                  fit: BoxFit.contain,
+                ),
     );
   }
 
@@ -205,6 +229,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     if (isPets) {
       final path = _petsHeaderPath();
       if (path != null) {
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+          return CachedNetworkImage(
+            imageUrl: path,
+            height: 26,
+            fit: BoxFit.contain,
+            placeholder: (context, url) => const SizedBox.shrink(),
+            errorWidget: (context, url, error) => const SizedBox.shrink(),
+          );
+        }
         return Image.file(
           File(path),
           height: 26,
@@ -255,6 +288,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     builder: (context) {
                       final path = _profileIconPath();
                       if (path != null) {
+                        if (path.startsWith('http://') || path.startsWith('https://')) {
+                          return CachedNetworkImage(
+                            imageUrl: path,
+                            width: 22,
+                            height: 22,
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) => const SizedBox.shrink(),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.person, color: Color(0xFF2B6CB0), size: 28),
+                          );
+                        }
                         return Image.file(
                           File(path),
                           width: 22,
@@ -288,11 +332,21 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             Text(_emojiForAnimal(animal), style: const TextStyle(fontSize: 40)),
       );
     } else if (avatarPath != null) {
-      final file = File(avatarPath);
-      if (file.existsSync()) {
-        avatar = Image.file(file, fit: BoxFit.contain);
+      if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+        avatar = CachedNetworkImage(
+          imageUrl: avatarPath,
+          fit: BoxFit.contain,
+          placeholder: (context, url) => const SizedBox.shrink(),
+          errorWidget: (context, url, error) =>
+              Text(_emojiForAnimal(animal), style: const TextStyle(fontSize: 40)),
+        );
       } else {
-        avatar = Text(_emojiForAnimal(animal), style: const TextStyle(fontSize: 40));
+        final file = File(avatarPath);
+        if (file.existsSync()) {
+          avatar = Image.file(file, fit: BoxFit.contain);
+        } else {
+          avatar = Text(_emojiForAnimal(animal), style: const TextStyle(fontSize: 40));
+        }
       }
     } else {
       avatar = Text(_emojiForAnimal(animal), style: const TextStyle(fontSize: 40));
@@ -456,6 +510,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     builder: (context) {
                       final heroPath = _heroImagePath();
                       if (heroPath != null) {
+                        if (heroPath.startsWith('http://') || heroPath.startsWith('https://')) {
+                          return CachedNetworkImage(
+                            imageUrl: heroPath,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            placeholder: (context, url) => const SizedBox.shrink(),
+                            errorWidget: (context, url, error) => const SizedBox.shrink(),
+                          );
+                        }
                         return Image.file(
                           File(heroPath),
                           fit: BoxFit.contain,
