@@ -1,0 +1,106 @@
+import 'package:equatable/equatable.dart';
+
+class Category extends Equatable {
+  final String id;
+  final LocalizedString title;
+  final int order;
+  final bool isVisible;
+  final bool isPaid;
+  final String? iapProductId;
+  final String tabIconAssetPath;
+
+  const Category({
+    required this.id,
+    required this.title,
+    required this.order,
+    required this.isVisible,
+    required this.isPaid,
+    this.iapProductId,
+    required this.tabIconAssetPath,
+  });
+
+  factory Category.fromFirestore(Map<String, dynamic> data, String id) {
+    return Category(
+      id: id,
+      title: LocalizedString.fromMap(data['title'] ?? {}),
+      order: data['order'] ?? 0,
+      isVisible: data['isVisible'] ?? true,
+      isPaid: data['isPaid'] ?? false,
+      iapProductId: data['iapProductId'],
+      tabIconAssetPath: data['tabIconAssetPath'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'title': title.toMap(),
+      'order': order,
+      'isVisible': isVisible,
+      'isPaid': isPaid,
+      'iapProductId': iapProductId,
+      'tabIconAssetPath': tabIconAssetPath,
+    };
+  }
+
+  Category copyWith({
+    String? id,
+    LocalizedString? title,
+    int? order,
+    bool? isVisible,
+    bool? isPaid,
+    String? iapProductId,
+    String? tabIconAssetPath,
+  }) {
+    return Category(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      order: order ?? this.order,
+      isVisible: isVisible ?? this.isVisible,
+      isPaid: isPaid ?? this.isPaid,
+      iapProductId: iapProductId ?? this.iapProductId,
+      tabIconAssetPath: tabIconAssetPath ?? this.tabIconAssetPath,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        id,
+        title,
+        order,
+        isVisible,
+        isPaid,
+        iapProductId,
+        tabIconAssetPath,
+      ];
+}
+
+class LocalizedString extends Equatable {
+  final String ru;
+  final String en;
+
+  const LocalizedString({
+    required this.ru,
+    required this.en,
+  });
+
+  factory LocalizedString.fromMap(Map<String, dynamic> map) {
+    return LocalizedString(
+      ru: map['ru'] ?? '',
+      en: map['en'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'ru': ru,
+      'en': en,
+    };
+  }
+
+  String getLocalized(String locale) {
+    return locale == 'ru' ? ru : en;
+  }
+
+  @override
+  List<Object?> get props => [ru, en];
+}
