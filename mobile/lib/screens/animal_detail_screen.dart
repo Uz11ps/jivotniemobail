@@ -285,10 +285,10 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
 
   Future<void> _syncVideoVolume() async {
     if (_videoController == null) return;
-    final hasExternalSound =
-        _soundPathResolved != null && _soundPathResolved!.isNotEmpty;
-    // Если отдельного аудиофайла нет — используем звук из mp4.
-    await _videoController!.setVolume(hasExternalSound ? 0.0 : 1.0);
+    // Воспроизводим 2 дорожки одновременно:
+    // 1) звук из mp4
+    // 2) отдельный sound/voice из админки (если есть)
+    await _videoController!.setVolume(1.0);
   }
 
   @override
