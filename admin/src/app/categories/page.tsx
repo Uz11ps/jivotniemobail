@@ -160,13 +160,17 @@ function CategoriesContent() {
                 accept="image/*"
                 label="Картинка над животными"
               />
-              {watch('heroImageAssetPath') && (
-                <img
-                  src={getFileUrlFromPathOrUrl(watch('heroImageAssetPath'))}
-                  alt="Hero"
-                  className="w-40 h-24 mt-2 rounded object-contain bg-slate-50"
-                />
-              )}
+              {(() => {
+                const hero = watch('heroImageAssetPath');
+                if (!hero) return null;
+                return (
+                  <img
+                    src={getFileUrlFromPathOrUrl(hero)}
+                    alt="Hero"
+                    className="w-40 h-24 mt-2 rounded object-contain bg-slate-50"
+                  />
+                );
+              })()}
             </div>
 
             <div className="mb-4">
