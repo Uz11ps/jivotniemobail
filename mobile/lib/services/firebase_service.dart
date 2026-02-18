@@ -60,8 +60,7 @@ class FirebaseService {
       final poll = _preferRestOnDesktop
           ? const Duration(seconds: 2)
           : const Duration(seconds: 30);
-      return Stream<int>.periodic(poll, (i) => i)
-          .asyncMap<List<Category>>((_) => getCategories())
+      return _pollCategoriesStream(poll)
           .distinct((a, b) => listEquals(a, b));
     }
     if (!_isInitialized || _firestore == null) {
@@ -145,8 +144,7 @@ class FirebaseService {
       final poll = _preferRestOnDesktop
           ? const Duration(seconds: 2)
           : const Duration(seconds: 30);
-      return Stream<int>.periodic(poll, (i) => i)
-          .asyncMap<List<Animal>>((_) => getAnimals(categoryId))
+      return _pollAnimalsStream(categoryId, poll)
           .distinct((a, b) => listEquals(a, b));
     }
     if (!_isInitialized || _firestore == null) {
@@ -276,6 +274,20 @@ class FirebaseService {
         .toList()
       ..sort((a, b) => a.order.compareTo(b.order));
     return categories;
+  }
+
+  Stream<List<Category>> _pollCategoriesStream(Duration poll) async* {
+    // Первый результат нужен сразу, без ожидания периода.
+    yield await getCategories();
+    yield* Stream<int>.periodic(poll, (i) => i)
+        .asyncMap<List<Category>>((_) => getCategories());
+  }
+
+  Stream<List<Animal>> _pollAnimalsStream(String categoryId, Duration poll) async* {
+    // Первый результат нужен сразу, без ожидания периода.
+    yield await getAnimals(categoryId);
+    yield* Stream<int>.periodic(poll, (i) => i)
+        .asyncMap<List<Animal>>((_) => getAnimals(categoryId));
   }
 
   Future<List<Animal>> _getAnimalsFromServerApi(String categoryId) async {

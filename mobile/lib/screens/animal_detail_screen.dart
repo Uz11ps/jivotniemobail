@@ -39,6 +39,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   File? _downloadedVideoFile;
   String? _soundPathResolved;
   static const String _devImgDir = r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img';
+  static const String _repoVideoBaseUrl =
+      'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
 
   @override
   void initState() {
@@ -104,6 +106,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
         _bgVideoUrl = await _resolveStorageOrUrl(storage, animal.bgVideoAssetPath!);
       } catch (_) {}
     }
+    _bgVideoUrl ??= _fallbackVideoUrlByAnimalId(animal.id);
     _soundPathResolved = animal.soundAssetPath;
 
     await _ensureVideoControllerInitialized();
@@ -219,6 +222,23 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
         return '$_devImgDir\\Parrot.mp4';
       case 'ferret':
         return '$_devImgDir\\Сhinchilla.mp4';
+      default:
+        return null;
+    }
+  }
+
+  String? _fallbackVideoUrlByAnimalId(String animalId) {
+    switch (animalId) {
+      case 'cat':
+        return '$_repoVideoBaseUrl/Cat.mp4';
+      case 'guinea':
+        return '$_repoVideoBaseUrl/Guinea%20Pig.mp4';
+      case 'white_mouse':
+        return '$_repoVideoBaseUrl/Guinea%20Pig%202.mp4';
+      case 'parrot':
+        return '$_repoVideoBaseUrl/Parrot.mp4';
+      case 'ferret':
+        return '$_repoVideoBaseUrl/%D0%A1hinchilla.mp4';
       default:
         return null;
     }

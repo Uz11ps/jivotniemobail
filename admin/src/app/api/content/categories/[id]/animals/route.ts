@@ -7,9 +7,17 @@ export const dynamic = 'force-dynamic';
 type Ctx = { params: Promise<{ id: string }> };
 const TTL_MS = 60 * 1000;
 const animalsCache = new Map<string, { ts: number; data: Array<Record<string, unknown>> }>();
+const FALLBACK_VIDEO_BASE_URL = 'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
 const FALLBACK_ANIMALS: Record<string, Array<Record<string, unknown>>> = {
   pets: [
-    { id: 'cat', order: 0, isVisible: true, name: { ru: 'Кот', en: 'Cat' }, topText: { ru: 'Кот/кошка', en: 'Cat' } },
+    {
+      id: 'cat',
+      order: 0,
+      isVisible: true,
+      name: { ru: 'Кот', en: 'Cat' },
+      topText: { ru: 'Кот/кошка', en: 'Cat' },
+      bgVideoAssetPath: `${FALLBACK_VIDEO_BASE_URL}/Cat.mp4`,
+    },
     { id: 'rabbit', order: 1, isVisible: true, name: { ru: 'Кролик', en: 'Rabbit' }, topText: { ru: 'Кролик', en: 'Rabbit' } },
     { id: 'frog', order: 2, isVisible: true, name: { ru: 'Лягушка', en: 'Frog' }, topText: { ru: 'Лягушка', en: 'Frog' } },
     {
