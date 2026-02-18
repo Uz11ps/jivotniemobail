@@ -79,6 +79,9 @@ class FirebaseService {
 
   Future<List<Category>> getCategories() async {
     if (_preferRestRead) {
+      if (_firestore == null) {
+        return _getCategoriesFromServerApi();
+      }
       try {
         final docs = await FirestoreRestService.listCollectionDocs('categories');
         return docs
@@ -163,6 +166,9 @@ class FirebaseService {
 
   Future<List<Animal>> getAnimals(String categoryId) async {
     if (_preferRestRead) {
+      if (_firestore == null) {
+        return _getAnimalsFromServerApi(categoryId);
+      }
       try {
         final docs = await FirestoreRestService.listCollectionDocs('categories/$categoryId/animals');
         return docs
@@ -257,7 +263,7 @@ class FirebaseService {
 
   Future<List<Category>> _getCategoriesFromServerApi() async {
     final uri = Uri.parse('$_contentBaseUrl/api/content/categories');
-    final res = await http.get(uri);
+    final res = await http.get(uri).timeout(const Duration(seconds: 8));
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('Content categories API failed: ${res.statusCode} ${res.body}');
     }
@@ -275,7 +281,7 @@ class FirebaseService {
   Future<List<Animal>> _getAnimalsFromServerApi(String categoryId) async {
     final safeCategoryId = Uri.encodeComponent(categoryId);
     final uri = Uri.parse('$_contentBaseUrl/api/content/categories/$safeCategoryId/animals');
-    final res = await http.get(uri);
+    final res = await http.get(uri).timeout(const Duration(seconds: 8));
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('Content animals API failed: ${res.statusCode} ${res.body}');
     }
