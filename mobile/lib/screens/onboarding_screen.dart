@@ -205,10 +205,10 @@ class _OnboardingPageView extends StatelessWidget {
         : (Localizations.localeOf(context).languageCode == 'ru'
             ? (page.subtitleRu.isNotEmpty ? page.subtitleRu : AppStrings.t(context, 'onboarding.subtitle1'))
             : (page.subtitleEn.isNotEmpty ? page.subtitleEn : AppStrings.t(context, 'onboarding.subtitle1')));
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: ColoredBox(
-        color: bgColor,
+    return ColoredBox(
+      color: bgColor,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
         child: Column(
           children: [
           const Spacer(),

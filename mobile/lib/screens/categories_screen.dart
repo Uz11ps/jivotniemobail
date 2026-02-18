@@ -491,15 +491,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Consumer3<CategoriesProvider, AnimalsProvider, PurchaseProvider>(
-          builder: (context, categoriesProvider, animalsProvider, purchaseProvider, child) {
-            if (categoriesProvider.isLoading) {
-              return const Center(child: CircularProgressIndicator(color: Colors.white));
-            }
+      body: Consumer3<CategoriesProvider, AnimalsProvider, PurchaseProvider>(
+        builder: (context, categoriesProvider, animalsProvider, purchaseProvider, child) {
+          if (categoriesProvider.isLoading) {
+            return const ColoredBox(
+              color: Color(0xFF66AEF8),
+              child: Center(child: CircularProgressIndicator(color: Colors.white)),
+            );
+          }
 
-            if (categoriesProvider.categories.isEmpty) {
-              return Center(
+          if (categoriesProvider.categories.isEmpty) {
+            return ColoredBox(
+              color: const Color(0xFF66AEF8),
+              child: Center(
                 child: Text(
                   AppStrings.t(context, 'categories.empty'),
                   textAlign: TextAlign.center,
@@ -509,10 +513,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-              );
-            }
+              ),
+            );
+          }
 
-            final categories = categoriesProvider.categories;
+          final categories = categoriesProvider.categories;
 
             final desiredSelectedId = _pickFirstAccessibleCategoryId(categories, purchaseProvider);
             final currentSelected = _selectedCategoryId;
@@ -549,8 +554,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               });
             }
 
-            return ColoredBox(
-              color: bgColor,
+          return ColoredBox(
+            color: bgColor,
+            child: SafeArea(
               child: Column(
                 children: [
                 _headerBar(selectedCategory, locale),
@@ -706,9 +712,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ),
               ],
             ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
