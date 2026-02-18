@@ -23,8 +23,8 @@ class AppStrings {
     'categories.empty': {'ru': 'Категории не найдены.\nДобавьте их в админке.', 'en': 'No categories found.\nAdd them in admin panel.'},
     'categories.lockedTitle': {'ru': 'Категория закрыта', 'en': 'Category is locked'},
     'categories.lockedText': {
-      'ru': 'Эта категория доступна после покупки в админке/IAP.',
-      'en': 'This category becomes available after purchase in admin/IAP.',
+      'ru': 'Эта категория платная. Подтвердите покупку в App Store.',
+      'en': 'This category is paid. Confirm purchase in App Store.',
     },
     'common.ok': {'ru': 'Ок', 'en': 'OK'},
     'animal.notFound': {'ru': 'Животное не найдено', 'en': 'Animal not found'},

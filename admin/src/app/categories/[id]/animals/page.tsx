@@ -149,7 +149,15 @@ function AnimalsContent() {
         </div>
 
         {(showForm || editingId) && (
-          <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-6 rounded-lg shadow mb-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                e.preventDefault();
+              }
+            }}
+            className="bg-white p-6 rounded-lg shadow mb-6"
+          >
             <h2 className="text-lg font-semibold mb-4">
               {editingId ? 'Редактировать животное' : 'Новое животное'}
             </h2>
@@ -227,6 +235,13 @@ function AnimalsContent() {
                 accept="audio/*"
                 label="Аудио животного"
               />
+              {watch('soundAssetPath') && (
+                <audio
+                  src={getFileUrlFromPathOrUrl(watch('soundAssetPath')!)}
+                  controls
+                  className="mt-2 w-full"
+                />
+              )}
             </div>
 
             <div className="mb-4">

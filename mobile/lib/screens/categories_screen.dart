@@ -22,6 +22,7 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final FirebaseService _firebaseService = FirebaseService();
+  static const String _contentBaseUrl = 'http://168.222.193.86';
   static const String _avatarBasePath = r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img';
   static const String _repoImgBaseUrl =
       'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
@@ -138,6 +139,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
       }
+      if (path.startsWith('/')) {
+        return '$_contentBaseUrl$path';
+      }
       if (File(path).existsSync()) {
         return path;
       }
@@ -146,29 +150,52 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Widget _categoryIconWidget(models.Category category) {
-    final iconPath = category.tabIconAssetPath.trim();
-    if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
-      return CachedNetworkImage(
-        imageUrl: iconPath,
-        width: 52,
-        height: 52,
-        fit: BoxFit.contain,
-        placeholder: (context, url) => const SizedBox.shrink(),
-        errorWidget: (context, url, error) =>
-            Text(_emojiForCategory(category), style: const TextStyle(fontSize: 34)),
-      );
-    }
-    return Text(
+    final iconRaw = category.tabIconAssetPath.trim();
+    final iconPath = iconRaw.startsWith('/') ? '$_contentBaseUrl$iconRaw' : iconRaw;
+    final fallback = Text(
       _emojiForCategory(category),
       style: const TextStyle(fontSize: 34),
     );
+    if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
+      return ClipOval(
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: CachedNetworkImage(
+            imageUrl: iconPath,
+            fit: BoxFit.contain,
+            placeholder: (context, url) => const SizedBox.shrink(),
+            errorWidget: (context, url, error) => fallback,
+          ),
+        ),
+      );
+    }
+    return fallback;
   }
 
-  String? _heroImagePath() {
+  String? _heroImagePath(models.Category selectedCategory) {
+    final fromAdmin = selectedCategory.heroImageAssetPath?.trim();
+    if (fromAdmin != null && fromAdmin.isNotEmpty) {
+      return fromAdmin.startsWith('/') ? '$_contentBaseUrl$fromAdmin' : fromAdmin;
+    }
     return _firstExistingPath([
       _heroImagePrimaryPath,
       _heroImageFallbackPath,
     ]);
+  }
+
+  Color _backgroundColor(models.Category selectedCategory) {
+    final raw = selectedCategory.backgroundColorHex?.trim() ?? '';
+    final hex = raw.replaceAll('#', '').toUpperCase();
+    if (hex.length == 6) {
+      final value = int.tryParse('FF$hex', radix: 16);
+      if (value != null) return Color(value);
+    }
+    if (hex.length == 8) {
+      final value = int.tryParse(hex, radix: 16);
+      if (value != null) return Color(value);
+    }
+    return const Color(0xFF66AEF8);
   }
 
   String? _petsHeaderPath() {
@@ -322,7 +349,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final avatarPath = _avatarPathForAnimal(animal);
     Widget avatar;
     // Приоритет: реальные данные из админки (URL), потом локальные картинки (dev-only), потом emoji.
-    final preview = animal.previewAssetPath;
+    final previewRaw = animal.previewAssetPath;
+    final preview = (previewRaw != null && previewRaw.startsWith('/'))
+        ? '$_contentBaseUrl$previewRaw'
+        : previewRaw;
     if (preview != null && (preview.startsWith('http://') || preview.startsWith('https://'))) {
       avatar = CachedNetworkImage(
         imageUrl: preview,
@@ -415,19 +445,38 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     PurchaseProvider purchaseProvider,
   ) async {
     if (_isLocked(category, purchaseProvider)) {
-      await showDialog<void>(
+      final shouldBuy = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: Text(AppStrings.t(context, 'categories.lockedTitle')),
           content: Text(AppStrings.t(context, 'categories.lockedText')),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(AppStrings.t(context, 'common.cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(AppStrings.t(context, 'common.ok')),
             ),
           ],
         ),
       );
+      if (shouldBuy == true) {
+        final productId = category.iapProductId;
+        if (productId != null && productId.isNotEmpty) {
+          final ok = await purchaseProvider.purchaseProduct(productId);
+          if (!mounted) return;
+          if (!ok) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Не удалось выполнить покупку. Проверьте App Store Connect / Product ID.')),
+            );
+          }
+          if (ok) {
+            await _selectCategory(category.id);
+          }
+        }
+      }
       return;
     }
     await _selectCategory(category.id);
@@ -441,9 +490,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final locale = LocaleHelper.getCurrentLocale(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF66AEF8),
       body: SafeArea(
         child: Consumer3<CategoriesProvider, AnimalsProvider, PurchaseProvider>(
           builder: (context, categoriesProvider, animalsProvider, purchaseProvider, child) {
@@ -492,6 +539,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               (category) => category.id == effectiveSelectedId,
               orElse: () => categories.first,
             );
+            final locale = LocaleHelper.getCurrentLocale(context);
+            final bgColor = _backgroundColor(selectedCategory);
 
             final animals = animalsProvider.getAnimals(selectedCategory.id);
             if (animals.isEmpty && !animalsProvider.isLoading(selectedCategory.id)) {
@@ -500,15 +549,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               });
             }
 
-            return Column(
-              children: [
+            return ColoredBox(
+              color: bgColor,
+              child: Column(
+                children: [
                 _headerBar(selectedCategory, locale),
                 SizedBox(
                   width: 250,
                   height: 180,
                   child: Builder(
                     builder: (context) {
-                      final heroPath = _heroImagePath();
+                      final heroPath = _heroImagePath(selectedCategory);
                       if (heroPath != null) {
                         if (heroPath.startsWith('http://') || heroPath.startsWith('https://')) {
                           return CachedNetworkImage(
@@ -631,7 +682,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                         : null,
                                   ),
                                   child: Stack(
-                                    clipBehavior: Clip.none,
+                                    clipBehavior: Clip.hardEdge,
                                     children: [
                                       Center(
                                         child: _categoryIconWidget(category),
@@ -654,6 +705,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   ),
                 ),
               ],
+            ),
             );
           },
         ),

@@ -24,6 +24,8 @@ const categorySchema = z.object({
   }),
   // Разрешаем пустое значение, чтобы можно было засеять Firestore и заполнять медиа постепенно.
   tabIconAssetPath: z.string().optional(),
+  heroImageAssetPath: z.string().optional(),
+  backgroundColorHex: z.string().optional(),
 });
 
 function CategoriesContent() {
@@ -41,6 +43,8 @@ function CategoriesContent() {
       priceRub: null,
       title: { ru: '', en: '' },
       tabIconAssetPath: '',
+      heroImageAssetPath: '',
+      backgroundColorHex: '#66AEF8',
     },
   });
 
@@ -49,6 +53,8 @@ function CategoriesContent() {
       const payload: Category = {
         ...data,
         tabIconAssetPath: data.tabIconAssetPath || '',
+        heroImageAssetPath: data.heroImageAssetPath || '',
+        backgroundColorHex: data.backgroundColorHex || '#66AEF8',
       };
       if (editingId) {
         await updateCategory(editingId, payload);
@@ -92,6 +98,8 @@ function CategoriesContent() {
                 priceRub: null,
                 title: { ru: '', en: '' },
                 tabIconAssetPath: '',
+                heroImageAssetPath: '',
+                backgroundColorHex: '#66AEF8',
               });
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -101,7 +109,15 @@ function CategoriesContent() {
         </div>
 
         {(showForm || editingId) && (
-          <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-6 rounded-lg shadow mb-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                e.preventDefault();
+              }
+            }}
+            className="bg-white p-6 rounded-lg shadow mb-6"
+          >
             <h2 className="text-lg font-semibold mb-4">
               {editingId ? 'Редактировать категорию' : 'Новая категория'}
             </h2>
@@ -134,6 +150,33 @@ function CategoriesContent() {
                   className="w-16 h-16 mt-2 rounded"
                 />
               )}
+            </div>
+
+            <div className="mb-4">
+              <StorageFileUpload
+                path={`categories/hero/${Date.now()}.png`}
+                value={watch('heroImageAssetPath')}
+                onUploaded={(meta) => setValue('heroImageAssetPath', meta.url)}
+                accept="image/*"
+                label="Картинка над животными"
+              />
+              {watch('heroImageAssetPath') && (
+                <img
+                  src={getFileUrlFromPathOrUrl(watch('heroImageAssetPath'))}
+                  alt="Hero"
+                  className="w-40 h-24 mt-2 rounded object-contain bg-slate-50"
+                />
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Цвет фона категории</label>
+              <input
+                type="color"
+                value={watch('backgroundColorHex') || '#66AEF8'}
+                onChange={(e) => setValue('backgroundColorHex', e.target.value)}
+                className="h-10 w-20 p-1 border rounded"
+              />
             </div>
 
             <div className="mb-4">

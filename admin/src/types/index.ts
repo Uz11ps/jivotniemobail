@@ -12,6 +12,8 @@ export interface Category {
   priceRub?: number | null; // для отображения в UI/админке
   title: LocalizedString;
   tabIconAssetPath: string; // Storage path (или legacy url)
+  heroImageAssetPath?: string;
+  backgroundColorHex?: string;
   gridCardStyle?: {
     backgroundColor?: string;
     cornerRadius?: number;
@@ -73,4 +75,14 @@ export interface Promotion {
   deviceIds: string[];
   startsAt?: string | null;
   endsAt?: string | null;
+}
+
+export interface OnboardingSlide {
+  id?: string;
+  order: number;
+  isActive: boolean;
+  title?: LocalizedString;
+  subtitle?: LocalizedString;
+  imageAssetPath: string;
+  backgroundColorHex?: string;
 }

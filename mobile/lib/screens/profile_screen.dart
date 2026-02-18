@@ -195,7 +195,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final locale = Localizations.localeOf(context).languageCode;
     final categoriesProvider = context.read<CategoriesProvider>();
     final animalsProvider = context.read<AnimalsProvider>();
-    await categoriesProvider.loadCategories();
+    if (categoriesProvider.categories.isEmpty) {
+      await categoriesProvider.loadCategories();
+    }
     final categories = categoriesProvider.categories;
     if (categories.isEmpty) {
       if (mounted) {
@@ -206,10 +208,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    for (final category in categories) {
-      await animalsProvider.loadAnimals(category.id);
-    }
+    // Моментально показываем статистику по уже загруженным данным.
+    _applyStats(locale, categories, animalsProvider);
 
+    // Недостающие категории подгружаем параллельно, чтобы не тормозить экран.
+    final toLoad = categories
+        .where((category) => animalsProvider.getAnimals(category.id).isEmpty)
+        .map((category) => animalsProvider.loadAnimals(category.id));
+    await Future.wait(toLoad);
+    _applyStats(locale, categories, animalsProvider);
+  }
+
+  void _applyStats(
+    String locale,
+    List categories,
+    AnimalsProvider animalsProvider,
+  ) {
     final categoryAnimalCounts = <String, int>{};
     var totalAnimals = 0;
     for (final category in categories) {

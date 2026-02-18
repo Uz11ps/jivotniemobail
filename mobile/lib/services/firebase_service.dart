@@ -348,6 +348,26 @@ class FirebaseService {
     return animals;
   }
 
+  Future<List<Map<String, dynamic>>> getOnboardingSlides() async {
+    try {
+      final uri = Uri.parse('$_contentBaseUrl/api/content/onboarding');
+      final res = await http.get(uri).timeout(const Duration(seconds: 4));
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        throw Exception('Content onboarding API failed: ${res.statusCode}');
+      }
+      final json = jsonDecode(res.body) as Map<String, dynamic>;
+      final list = (json['slides'] as List<dynamic>? ?? const []);
+      return list
+          .map((e) => (e as Map).map((k, v) => MapEntry(k.toString(), v)))
+          .cast<Map<String, dynamic>>()
+          .where((m) => (m['isActive'] as bool?) ?? true)
+          .toList()
+        ..sort((a, b) => (a['order'] as int? ?? 0).compareTo(b['order'] as int? ?? 0));
+    } catch (_) {
+      return const [];
+    }
+  }
+
   List<Category> _localFallbackCategories() {
     return const [
       Category(

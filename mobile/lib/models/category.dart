@@ -8,6 +8,8 @@ class Category extends Equatable {
   final bool isPaid;
   final String? iapProductId;
   final String tabIconAssetPath;
+  final String? heroImageAssetPath;
+  final String? backgroundColorHex;
 
   const Category({
     required this.id,
@@ -17,6 +19,8 @@ class Category extends Equatable {
     required this.isPaid,
     this.iapProductId,
     required this.tabIconAssetPath,
+    this.heroImageAssetPath,
+    this.backgroundColorHex,
   });
 
   factory Category.fromFirestore(Map<String, dynamic> data, String id) {
@@ -28,6 +32,8 @@ class Category extends Equatable {
       isPaid: data['isPaid'] ?? false,
       iapProductId: data['iapProductId'],
       tabIconAssetPath: data['tabIconAssetPath'] ?? '',
+      heroImageAssetPath: data['heroImageAssetPath'],
+      backgroundColorHex: data['backgroundColorHex'],
     );
   }
 
@@ -39,6 +45,8 @@ class Category extends Equatable {
       'isPaid': isPaid,
       'iapProductId': iapProductId,
       'tabIconAssetPath': tabIconAssetPath,
+      'heroImageAssetPath': heroImageAssetPath,
+      'backgroundColorHex': backgroundColorHex,
     };
   }
 
@@ -50,6 +58,8 @@ class Category extends Equatable {
     bool? isPaid,
     String? iapProductId,
     String? tabIconAssetPath,
+    String? heroImageAssetPath,
+    String? backgroundColorHex,
   }) {
     return Category(
       id: id ?? this.id,
@@ -59,6 +69,8 @@ class Category extends Equatable {
       isPaid: isPaid ?? this.isPaid,
       iapProductId: iapProductId ?? this.iapProductId,
       tabIconAssetPath: tabIconAssetPath ?? this.tabIconAssetPath,
+      heroImageAssetPath: heroImageAssetPath ?? this.heroImageAssetPath,
+      backgroundColorHex: backgroundColorHex ?? this.backgroundColorHex,
     );
   }
 
@@ -71,6 +83,8 @@ class Category extends Equatable {
         isPaid,
         iapProductId,
         tabIconAssetPath,
+        heroImageAssetPath,
+        backgroundColorHex,
       ];
 }
 

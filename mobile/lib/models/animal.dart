@@ -12,6 +12,7 @@ class Animal extends Equatable {
   final String? bgVideoAssetPath;
   final String? previewAssetPath;
   final String? soundAssetPath;
+  final Map<String, String>? voiceAssetPath;
   final String? animationAssetPath;
 
   const Animal({
@@ -25,6 +26,7 @@ class Animal extends Equatable {
     this.bgVideoAssetPath,
     this.previewAssetPath,
     this.soundAssetPath,
+    this.voiceAssetPath,
     this.animationAssetPath,
   });
 
@@ -40,6 +42,8 @@ class Animal extends Equatable {
       bgVideoAssetPath: data['bgVideoAssetPath'],
       previewAssetPath: data['previewAssetPath'],
       soundAssetPath: data['soundAssetPath'],
+      voiceAssetPath: (data['voiceAssetPath'] as Map<String, dynamic>?)
+          ?.map((key, value) => MapEntry(key, value?.toString() ?? '')),
       animationAssetPath: data['animationAssetPath'],
     );
   }
@@ -54,6 +58,7 @@ class Animal extends Equatable {
       'bgVideoAssetPath': bgVideoAssetPath,
       'previewAssetPath': previewAssetPath,
       'soundAssetPath': soundAssetPath,
+      'voiceAssetPath': voiceAssetPath,
       'animationAssetPath': animationAssetPath,
     };
   }
@@ -70,6 +75,7 @@ class Animal extends Equatable {
         bgVideoAssetPath,
         previewAssetPath,
         soundAssetPath,
+        voiceAssetPath,
         animationAssetPath,
       ];
 }

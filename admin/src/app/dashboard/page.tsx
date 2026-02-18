@@ -92,6 +92,16 @@ function DashboardContent() {
             </p>
           </Link>
 
+          <Link
+            href="/onboarding"
+            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
+          >
+            <h2 className="text-lg font-semibold mb-2">Онбординг</h2>
+            <p className="text-gray-600 text-sm">
+              Редактирование первых 3 экранов приложения
+            </p>
+          </Link>
+
 
         </div>
       </main>

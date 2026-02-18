@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../utils/app_strings.dart';
+import '../services/firebase_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -12,9 +14,11 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
+  final FirebaseService _firebaseService = FirebaseService();
+  static const String _contentBaseUrl = 'http://168.222.193.86';
   int _currentPage = 0;
 
-  final List<OnboardingPage> _pages = [
+  List<OnboardingPage> _pages = [
     const OnboardingPage(
       title: "LET'S EXPLORE!",
       subtitle: 'onboarding.subtitle1',
@@ -37,6 +41,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       right: '🐨',
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOnboardingFromAdmin();
+  }
+
+  Future<void> _loadOnboardingFromAdmin() async {
+    final slides = await _firebaseService.getOnboardingSlides();
+    if (slides.isEmpty || !mounted) return;
+    final mapped = slides.map((s) {
+      final titleMap = s['title'] as Map<String, dynamic>?;
+      final subtitleMap = s['subtitle'] as Map<String, dynamic>?;
+      return OnboardingPage(
+        title: (titleMap?['en'] as String?)?.isNotEmpty == true
+            ? (titleMap!['en'] as String)
+            : "LET'S EXPLORE!",
+        subtitle: '',
+        subtitleRu: (subtitleMap?['ru'] as String?) ?? '',
+        subtitleEn: (subtitleMap?['en'] as String?) ?? '',
+        lion: '🦁',
+        middle: '🐙',
+        right: '🐼',
+        imageAssetPath: () {
+          final raw = (s['imageAssetPath'] as String?) ?? '';
+          if (raw.startsWith('/')) return '$_contentBaseUrl$raw';
+          return raw;
+        }(),
+        backgroundColorHex: (s['backgroundColorHex'] as String?) ?? '#F0F2F5',
+      );
+    }).toList();
+    if (mapped.isNotEmpty) {
+      setState(() {
+        _pages = mapped;
+        _currentPage = 0;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -125,16 +167,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 class OnboardingPage {
   final String title;
   final String subtitle;
+  final String subtitleRu;
+  final String subtitleEn;
   final String lion;
   final String middle;
   final String right;
+  final String imageAssetPath;
+  final String backgroundColorHex;
 
   const OnboardingPage({
     required this.title,
     required this.subtitle,
+    this.subtitleRu = '',
+    this.subtitleEn = '',
     required this.lion,
     required this.middle,
     required this.right,
+    this.imageAssetPath = '',
+    this.backgroundColorHex = '#F0F2F5',
   });
 }
 
@@ -146,33 +196,53 @@ class _OnboardingPageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final bgHex = page.backgroundColorHex.replaceAll('#', '');
+    final bgColor = bgHex.length == 6
+        ? Color(int.tryParse('FF$bgHex', radix: 16) ?? 0xFFF0F2F5)
+        : const Color(0xFFF0F2F5);
+    final subtitle = page.subtitle.isNotEmpty
+        ? AppStrings.t(context, page.subtitle)
+        : (Localizations.localeOf(context).languageCode == 'ru'
+            ? (page.subtitleRu.isNotEmpty ? page.subtitleRu : AppStrings.t(context, 'onboarding.subtitle1'))
+            : (page.subtitleEn.isNotEmpty ? page.subtitleEn : AppStrings.t(context, 'onboarding.subtitle1')));
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: Column(
-        children: [
+      child: ColoredBox(
+        color: bgColor,
+        child: Column(
+          children: [
           const Spacer(),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 14,
-            runSpacing: 10,
-            children: const [
-              Text('🌍', style: TextStyle(fontSize: 34)),
-              Text('🎵', style: TextStyle(fontSize: 30)),
-              Text('⭐', style: TextStyle(fontSize: 24)),
-              Text('🌿', style: TextStyle(fontSize: 26)),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _AnimalTile(emoji: page.lion, color: const Color(0xFFF8D470), angle: -0.1),
-              const SizedBox(width: 10),
-              _AnimalTile(emoji: page.middle, color: const Color(0xFFB8C7FF), angle: 0),
-              const SizedBox(width: 10),
-              _AnimalTile(emoji: page.right, color: const Color(0xFFC3F0B0), angle: 0.1),
-            ],
-          ),
+          if (page.imageAssetPath.isNotEmpty)
+            CachedNetworkImage(
+              imageUrl: page.imageAssetPath,
+              fit: BoxFit.contain,
+              placeholder: (context, url) => const SizedBox(height: 240),
+              errorWidget: (context, url, error) => const SizedBox.shrink(),
+            )
+          else ...[
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 14,
+              runSpacing: 10,
+              children: const [
+                Text('🌍', style: TextStyle(fontSize: 34)),
+                Text('🎵', style: TextStyle(fontSize: 30)),
+                Text('⭐', style: TextStyle(fontSize: 24)),
+                Text('🌿', style: TextStyle(fontSize: 26)),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _AnimalTile(emoji: page.lion, color: const Color(0xFFF8D470), angle: -0.1),
+                const SizedBox(width: 10),
+                _AnimalTile(emoji: page.middle, color: const Color(0xFFB8C7FF), angle: 0),
+                const SizedBox(width: 10),
+                _AnimalTile(emoji: page.right, color: const Color(0xFFC3F0B0), angle: 0.1),
+              ],
+            ),
+          ],
           const SizedBox(height: 18),
           RichText(
             text: TextSpan(
@@ -190,7 +260,7 @@ class _OnboardingPageView extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            AppStrings.t(context, page.subtitle),
+            subtitle,
             style: textTheme.bodyMedium?.copyWith(
               fontFamily: 'SF Pro Rounded',
               color: const Color(0xFF747474),
@@ -199,6 +269,7 @@ class _OnboardingPageView extends StatelessWidget {
           ),
           const Spacer(),
         ],
+        ),
       ),
     );
   }

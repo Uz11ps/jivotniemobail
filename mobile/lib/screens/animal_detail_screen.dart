@@ -41,6 +41,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   static const String _devImgDir = r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img';
   static const String _repoVideoBaseUrl =
       'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
+  static const String _contentBaseUrl = 'http://168.222.193.86';
 
   @override
   void initState() {
@@ -108,11 +109,16 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     }
     _bgVideoUrl ??= _fallbackVideoUrlByAnimalId(animal.id);
     _soundPathResolved = animal.soundAssetPath;
+    if ((_soundPathResolved == null || _soundPathResolved!.isEmpty) &&
+        animal.voiceAssetPath != null) {
+      _soundPathResolved = animal.voiceAssetPath!['ru'] ?? animal.voiceAssetPath!['en'];
+    }
 
     await _ensureVideoControllerInitialized();
     if (_videoController == null) {
       await _tryInitFromLocalDevVideo();
     }
+    await _autoStartPlayback();
 
     if (mounted) {
       setState(() {
@@ -124,6 +130,9 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   Future<String> _resolveStorageOrUrl(FirebaseStorage? storage, String value) async {
     if (value.startsWith('http://') || value.startsWith('https://')) {
       return value;
+    }
+    if (value.startsWith('/')) {
+      return '$_contentBaseUrl$value';
     }
     if (storage == null) {
       throw Exception('Firebase Storage not available for non-url asset');
@@ -245,41 +254,32 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   }
 
   Future<void> _togglePlay() async {
+    if (!mounted) return;
+    context.go('/categories');
+  }
+
+  Future<void> _autoStartPlayback() async {
     if (_videoController == null && _bgVideoUrl != null) {
       await _ensureVideoControllerInitialized();
     }
     if (_videoController == null) {
       await _tryInitFromLocalDevVideo();
     }
-    final soundPath = _soundPathResolved;
-    final hasSound = soundPath != null && soundPath.isNotEmpty;
     await _syncVideoVolume();
-
-    final willPlay = !_isPlaying;
-    setState(() => _isPlaying = willPlay);
-
-    // Видео
     if (_videoController != null) {
-      if (willPlay) {
-        await _videoController!.play();
-      } else {
-        await _videoController!.pause();
-      }
+      await _videoController!.play();
     }
-
-    // Аудио
-    if (!hasSound) {
-      return;
-    }
-    if (willPlay) {
+    final soundPath = _soundPathResolved;
+    if (soundPath != null && soundPath.isNotEmpty) {
       if (_hasStartedAudio) {
         await _audioService.resumeSound();
       } else {
         _hasStartedAudio = true;
         await _audioService.playSound(soundPath);
       }
-    } else {
-      await _audioService.pauseSound();
+    }
+    if (mounted && !_isPlaying) {
+      setState(() => _isPlaying = true);
     }
   }
 
