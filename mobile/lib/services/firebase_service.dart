@@ -14,6 +14,8 @@ import 'firestore_rest_service.dart';
 class FirebaseService {
   static const String _analyticsBaseUrl =
       String.fromEnvironment('ANALYTICS_BASE_URL', defaultValue: 'http://168.222.193.86');
+  static const String _contentBaseUrl =
+      String.fromEnvironment('CONTENT_BASE_URL', defaultValue: 'http://168.222.193.86');
   static const String _analyticsIngestKey =
       String.fromEnvironment('ANALYTICS_INGEST_KEY', defaultValue: 'analytics123');
 
@@ -74,24 +76,34 @@ class FirebaseService {
 
   Future<List<Category>> getCategories() async {
     if (_preferRestRead) {
-      final docs = await FirestoreRestService.listCollectionDocs('categories');
-      return docs
-          .map((m) => Category.fromFirestore(m, (m['id'] as String?) ?? ''))
-          .where((c) => c.isVisible)
-          .toList()
-        ..sort((a, b) => a.order.compareTo(b.order));
+      try {
+        final docs = await FirestoreRestService.listCollectionDocs('categories');
+        return docs
+            .map((m) => Category.fromFirestore(m, (m['id'] as String?) ?? ''))
+            .where((c) => c.isVisible)
+            .toList()
+          ..sort((a, b) => a.order.compareTo(b.order));
+      } catch (_) {
+        return _getCategoriesFromServerApi();
+      }
     }
     if (!_isInitialized || _firestore == null) {
       throw Exception('Firebase Firestore not initialized');
     }
-    final snapshot = await _firestore!
-        .collection('categories')
-        .where('isVisible', isEqualTo: true)
-        .orderBy('order')
-        .get();
-    return snapshot.docs
-        .map((doc) => Category.fromFirestore(doc.data(), doc.id))
-        .toList();
+    try {
+      final snapshot = await _firestore!
+          .collection('categories')
+          .where('isVisible', isEqualTo: true)
+          .orderBy('order')
+          .get();
+      final result = snapshot.docs
+          .map((doc) => Category.fromFirestore(doc.data(), doc.id))
+          .toList();
+      if (result.isNotEmpty) {
+        return result;
+      }
+    } catch (_) {}
+    return _getCategoriesFromServerApi();
   }
 
   Future<void> updateCategoryOrders(List<Category> categories) async {
@@ -145,26 +157,36 @@ class FirebaseService {
 
   Future<List<Animal>> getAnimals(String categoryId) async {
     if (_preferRestRead) {
-      final docs = await FirestoreRestService.listCollectionDocs('categories/$categoryId/animals');
-      return docs
-          .map((m) => Animal.fromFirestore(m, (m['id'] as String?) ?? '', categoryId))
-          .where((a) => a.isVisible)
-          .toList()
-        ..sort((a, b) => a.order.compareTo(b.order));
+      try {
+        final docs = await FirestoreRestService.listCollectionDocs('categories/$categoryId/animals');
+        return docs
+            .map((m) => Animal.fromFirestore(m, (m['id'] as String?) ?? '', categoryId))
+            .where((a) => a.isVisible)
+            .toList()
+          ..sort((a, b) => a.order.compareTo(b.order));
+      } catch (_) {
+        return _getAnimalsFromServerApi(categoryId);
+      }
     }
     if (!_isInitialized || _firestore == null) {
       throw Exception('Firebase Firestore not initialized');
     }
-    final snapshot = await _firestore!
-        .collection('categories')
-        .doc(categoryId)
-        .collection('animals')
-        .where('isVisible', isEqualTo: true)
-        .orderBy('order')
-        .get();
-    return snapshot.docs
-        .map((doc) => Animal.fromFirestore(doc.data(), doc.id, categoryId))
-        .toList();
+    try {
+      final snapshot = await _firestore!
+          .collection('categories')
+          .doc(categoryId)
+          .collection('animals')
+          .where('isVisible', isEqualTo: true)
+          .orderBy('order')
+          .get();
+      final result = snapshot.docs
+          .map((doc) => Animal.fromFirestore(doc.data(), doc.id, categoryId))
+          .toList();
+      if (result.isNotEmpty) {
+        return result;
+      }
+    } catch (_) {}
+    return _getAnimalsFromServerApi(categoryId);
   }
 
   Future<Animal?> getAnimal(String categoryId, String animalId) async {
@@ -225,6 +247,41 @@ class FirebaseService {
     return snapshot.docs
         .map((doc) => ParentalTest.fromFirestore(doc.data(), doc.id))
         .toList();
+  }
+
+  Future<List<Category>> _getCategoriesFromServerApi() async {
+    final uri = Uri.parse('$_contentBaseUrl/api/content/categories');
+    final res = await http.get(uri);
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Content categories API failed: ${res.statusCode} ${res.body}');
+    }
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    final list = (json['categories'] as List<dynamic>? ?? const []);
+    final categories = list
+        .map((e) => e as Map<String, dynamic>)
+        .map((m) => Category.fromFirestore(m, (m['id'] as String?) ?? ''))
+        .where((c) => c.isVisible)
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    return categories;
+  }
+
+  Future<List<Animal>> _getAnimalsFromServerApi(String categoryId) async {
+    final safeCategoryId = Uri.encodeComponent(categoryId);
+    final uri = Uri.parse('$_contentBaseUrl/api/content/categories/$safeCategoryId/animals');
+    final res = await http.get(uri);
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Content animals API failed: ${res.statusCode} ${res.body}');
+    }
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    final list = (json['animals'] as List<dynamic>? ?? const []);
+    final animals = list
+        .map((e) => e as Map<String, dynamic>)
+        .map((m) => Animal.fromFirestore(m, (m['id'] as String?) ?? '', categoryId))
+        .where((a) => a.isVisible)
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    return animals;
   }
 
   Future<Promotion?> getActivePromotion({required String deviceId}) async {
