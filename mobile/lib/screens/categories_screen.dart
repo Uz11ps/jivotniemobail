@@ -159,8 +159,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
       return ClipOval(
         child: SizedBox(
-          width: 48,
-          height: 48,
+          width: 42,
+          height: 42,
           child: CachedNetworkImage(
             imageUrl: iconPath,
             fit: BoxFit.contain,
@@ -669,16 +669,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                 onTap: () => _onCategoryTap(category, purchaseProvider),
                                 child: Container(
                                   margin: EdgeInsets.only(
-                                    left: index == 0 ? 2 : 8,
-                                    right: index == categories.length - 1 ? 2 : 8,
+                                    left: index == 0 ? 2 : 4,
+                                    right: index == categories.length - 1 ? 2 : 4,
                                   ),
-                                  width: 78,
-                                  height: 78,
+                                  width: 68,
+                                  height: 68,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: bgColor,
                                     border: isSelected
-                                        ? Border.all(color: const Color(0xFF2475C8), width: 4)
+                                        ? Border.all(color: const Color(0xFF2475C8), width: 3)
                                         : null,
                                   ),
                                   child: Stack(
