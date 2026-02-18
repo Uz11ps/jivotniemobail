@@ -81,11 +81,8 @@ class FirebaseService {
   Future<List<Category>> getCategories() async {
     if (_preferRestRead) {
       if (_firestore == null) {
-        try {
-          return await _getCategoriesFromServerApi();
-        } catch (_) {
-          return _localFallbackCategories();
-        }
+        // Без Firebase на iOS стартуем мгновенно с локального набора.
+        return _localFallbackCategories();
       }
       try {
         final docs = await FirestoreRestService.listCollectionDocs('categories');
@@ -179,11 +176,8 @@ class FirebaseService {
   Future<List<Animal>> getAnimals(String categoryId) async {
     if (_preferRestRead) {
       if (_firestore == null) {
-        try {
-          return await _getAnimalsFromServerApi(categoryId);
-        } catch (_) {
-          return _localFallbackAnimals(categoryId);
-        }
+        // Без Firebase на iOS стартуем мгновенно с локального набора.
+        return _localFallbackAnimals(categoryId);
       }
       try {
         final docs = await FirestoreRestService.listCollectionDocs('categories/$categoryId/animals');
@@ -304,16 +298,36 @@ class FirebaseService {
 
   Stream<List<Category>> _pollCategoriesStream(Duration poll) async* {
     // Первый результат нужен сразу, без ожидания периода.
+    if (_firestore == null) {
+      yield _localFallbackCategories();
+      yield* Stream<int>.periodic(poll, (i) => i).asyncMap<List<Category>>((_) async {
+        try {
+          return await _getCategoriesFromServerApi();
+        } catch (_) {
+          return _localFallbackCategories();
+        }
+      });
+      return;
+    }
     yield await getCategories();
-    yield* Stream<int>.periodic(poll, (i) => i)
-        .asyncMap<List<Category>>((_) => getCategories());
+    yield* Stream<int>.periodic(poll, (i) => i).asyncMap<List<Category>>((_) => getCategories());
   }
 
   Stream<List<Animal>> _pollAnimalsStream(String categoryId, Duration poll) async* {
     // Первый результат нужен сразу, без ожидания периода.
+    if (_firestore == null) {
+      yield _localFallbackAnimals(categoryId);
+      yield* Stream<int>.periodic(poll, (i) => i).asyncMap<List<Animal>>((_) async {
+        try {
+          return await _getAnimalsFromServerApi(categoryId);
+        } catch (_) {
+          return _localFallbackAnimals(categoryId);
+        }
+      });
+      return;
+    }
     yield await getAnimals(categoryId);
-    yield* Stream<int>.periodic(poll, (i) => i)
-        .asyncMap<List<Animal>>((_) => getAnimals(categoryId));
+    yield* Stream<int>.periodic(poll, (i) => i).asyncMap<List<Animal>>((_) => getAnimals(categoryId));
   }
 
   Future<List<Animal>> _getAnimalsFromServerApi(String categoryId) async {
