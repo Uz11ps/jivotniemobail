@@ -18,6 +18,8 @@ class FirebaseService {
       String.fromEnvironment('CONTENT_BASE_URL', defaultValue: 'http://168.222.193.86');
   static const String _analyticsIngestKey =
       String.fromEnvironment('ANALYTICS_INGEST_KEY', defaultValue: 'analytics123');
+  static const String _repoVideoBaseUrl =
+      'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
 
   FirebaseFirestore? _firestore;
   FirebaseStorage? _storage;
@@ -79,7 +81,11 @@ class FirebaseService {
   Future<List<Category>> getCategories() async {
     if (_preferRestRead) {
       if (_firestore == null) {
-        return _getCategoriesFromServerApi();
+        try {
+          return await _getCategoriesFromServerApi();
+        } catch (_) {
+          return _localFallbackCategories();
+        }
       }
       try {
         final docs = await FirestoreRestService.listCollectionDocs('categories');
@@ -89,7 +95,11 @@ class FirebaseService {
             .toList()
           ..sort((a, b) => a.order.compareTo(b.order));
       } catch (_) {
-        return _getCategoriesFromServerApi();
+        try {
+          return await _getCategoriesFromServerApi();
+        } catch (_) {
+          return _localFallbackCategories();
+        }
       }
     }
     if (!_isInitialized || _firestore == null) {
@@ -108,7 +118,11 @@ class FirebaseService {
         return result;
       }
     } catch (_) {}
-    return _getCategoriesFromServerApi();
+    try {
+      return await _getCategoriesFromServerApi();
+    } catch (_) {
+      return _localFallbackCategories();
+    }
   }
 
   Future<void> updateCategoryOrders(List<Category> categories) async {
@@ -165,7 +179,11 @@ class FirebaseService {
   Future<List<Animal>> getAnimals(String categoryId) async {
     if (_preferRestRead) {
       if (_firestore == null) {
-        return _getAnimalsFromServerApi(categoryId);
+        try {
+          return await _getAnimalsFromServerApi(categoryId);
+        } catch (_) {
+          return _localFallbackAnimals(categoryId);
+        }
       }
       try {
         final docs = await FirestoreRestService.listCollectionDocs('categories/$categoryId/animals');
@@ -175,7 +193,11 @@ class FirebaseService {
             .toList()
           ..sort((a, b) => a.order.compareTo(b.order));
       } catch (_) {
-        return _getAnimalsFromServerApi(categoryId);
+        try {
+          return await _getAnimalsFromServerApi(categoryId);
+        } catch (_) {
+          return _localFallbackAnimals(categoryId);
+        }
       }
     }
     if (!_isInitialized || _firestore == null) {
@@ -196,7 +218,11 @@ class FirebaseService {
         return result;
       }
     } catch (_) {}
-    return _getAnimalsFromServerApi(categoryId);
+    try {
+      return await _getAnimalsFromServerApi(categoryId);
+    } catch (_) {
+      return _localFallbackAnimals(categoryId);
+    }
   }
 
   Future<Animal?> getAnimal(String categoryId, String animalId) async {
@@ -261,7 +287,7 @@ class FirebaseService {
 
   Future<List<Category>> _getCategoriesFromServerApi() async {
     final uri = Uri.parse('$_contentBaseUrl/api/content/categories');
-    final res = await http.get(uri).timeout(const Duration(seconds: 8));
+    final res = await http.get(uri).timeout(const Duration(seconds: 4));
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('Content categories API failed: ${res.statusCode} ${res.body}');
     }
@@ -293,7 +319,7 @@ class FirebaseService {
   Future<List<Animal>> _getAnimalsFromServerApi(String categoryId) async {
     final safeCategoryId = Uri.encodeComponent(categoryId);
     final uri = Uri.parse('$_contentBaseUrl/api/content/categories/$safeCategoryId/animals');
-    final res = await http.get(uri).timeout(const Duration(seconds: 8));
+    final res = await http.get(uri).timeout(const Duration(seconds: 4));
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('Content animals API failed: ${res.statusCode} ${res.body}');
     }
@@ -306,6 +332,184 @@ class FirebaseService {
         .toList()
       ..sort((a, b) => a.order.compareTo(b.order));
     return animals;
+  }
+
+  List<Category> _localFallbackCategories() {
+    return const [
+      Category(
+        id: 'pets',
+        title: LocalizedString(ru: 'Питомцы', en: 'Pets'),
+        order: 0,
+        isVisible: true,
+        isPaid: false,
+        iapProductId: null,
+        tabIconAssetPath: '',
+      ),
+      Category(
+        id: 'farm',
+        title: LocalizedString(ru: 'Ферма', en: 'Farm'),
+        order: 1,
+        isVisible: true,
+        isPaid: true,
+        iapProductId: 'com.detiiosjivotnie.farm',
+        tabIconAssetPath: '',
+      ),
+      Category(
+        id: 'forest',
+        title: LocalizedString(ru: 'Лес', en: 'Forest'),
+        order: 2,
+        isVisible: true,
+        isPaid: true,
+        iapProductId: 'com.detiiosjivotnie.forest',
+        tabIconAssetPath: '',
+      ),
+      Category(
+        id: 'jungle',
+        title: LocalizedString(ru: 'Джунгли', en: 'Jungle'),
+        order: 3,
+        isVisible: true,
+        isPaid: true,
+        iapProductId: 'com.detiiosjivotnie.jungle',
+        tabIconAssetPath: '',
+      ),
+    ];
+  }
+
+  List<Animal> _localFallbackAnimals(String categoryId) {
+    if (categoryId == 'pets') {
+      return [
+        Animal(
+          id: 'cat',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Кот', en: 'Cat'),
+          topText: const LocalizedString(ru: 'Кот/кошка', en: 'Cat'),
+          order: 0,
+          isVisible: true,
+          bgVideoAssetPath: '$_repoVideoBaseUrl/Cat.mp4',
+        ),
+        Animal(
+          id: 'rabbit',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Кролик', en: 'Rabbit'),
+          topText: const LocalizedString(ru: 'Кролик', en: 'Rabbit'),
+          order: 1,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'frog',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Лягушка', en: 'Frog'),
+          topText: const LocalizedString(ru: 'Лягушка', en: 'Frog'),
+          order: 2,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'guinea',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Морская свинка', en: 'Guinea Pig'),
+          topText: const LocalizedString(ru: 'Морская свинка', en: 'Guinea pig'),
+          order: 3,
+          isVisible: true,
+          bgVideoAssetPath: '$_repoVideoBaseUrl/Guinea%20Pig.mp4',
+        ),
+        Animal(
+          id: 'turtle',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Черепаха', en: 'Turtle'),
+          topText: const LocalizedString(ru: 'Черепаха', en: 'Turtle'),
+          order: 4,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'dog',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Собака', en: 'Dog'),
+          topText: const LocalizedString(ru: 'Собака', en: 'Dog'),
+          order: 5,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'mouse',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Мышка', en: 'Mouse'),
+          topText: const LocalizedString(ru: 'Мышка', en: 'Mouse'),
+          order: 6,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'hamster',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Хомяк', en: 'Hamster'),
+          topText: const LocalizedString(ru: 'Хомяк', en: 'Hamster'),
+          order: 7,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'parrot',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Попугай', en: 'Parrot'),
+          topText: const LocalizedString(ru: 'Попугай', en: 'Parrot'),
+          order: 8,
+          isVisible: true,
+          bgVideoAssetPath: '$_repoVideoBaseUrl/Parrot.mp4',
+        ),
+        Animal(
+          id: 'ferret',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Хорек', en: 'Ferret'),
+          topText: const LocalizedString(ru: 'Хорек', en: 'Ferret'),
+          order: 9,
+          isVisible: true,
+          bgVideoAssetPath: '$_repoVideoBaseUrl/%D0%A1hinchilla.mp4',
+        ),
+        Animal(
+          id: 'snail',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Улитка', en: 'Snail'),
+          topText: const LocalizedString(ru: 'Улитка', en: 'Snail'),
+          order: 10,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'white_mouse',
+          categoryId: 'pets',
+          name: const LocalizedString(ru: 'Белая мышь', en: 'White mouse'),
+          topText: const LocalizedString(ru: 'Белая мышь', en: 'White mouse'),
+          order: 11,
+          isVisible: true,
+          bgVideoAssetPath: '$_repoVideoBaseUrl/Guinea%20Pig%202.mp4',
+        ),
+      ];
+    }
+    if (categoryId == 'farm') {
+      return const [
+        Animal(
+          id: 'cow',
+          categoryId: 'farm',
+          name: LocalizedString(ru: 'Корова', en: 'Cow'),
+          topText: LocalizedString(ru: 'Корова', en: 'Cow'),
+          order: 0,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'pig',
+          categoryId: 'farm',
+          name: LocalizedString(ru: 'Свинья', en: 'Pig'),
+          topText: LocalizedString(ru: 'Свинья', en: 'Pig'),
+          order: 1,
+          isVisible: true,
+        ),
+        Animal(
+          id: 'goat',
+          categoryId: 'farm',
+          name: LocalizedString(ru: 'Коза', en: 'Goat'),
+          topText: LocalizedString(ru: 'Коза', en: 'Goat'),
+          order: 2,
+          isVisible: true,
+        ),
+      ];
+    }
+    return const [];
   }
 
   Future<Promotion?> getActivePromotion({required String deviceId}) async {
