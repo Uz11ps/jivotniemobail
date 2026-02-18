@@ -57,7 +57,10 @@ class FirebaseService {
   // Categories
   Stream<List<Category>> getCategoriesStream() {
     if (_preferRestRead) {
-      return Stream<int>.periodic(const Duration(seconds: 2), (i) => i)
+      final poll = _preferRestOnDesktop
+          ? const Duration(seconds: 2)
+          : const Duration(seconds: 30);
+      return Stream<int>.periodic(poll, (i) => i)
           .asyncMap<List<Category>>((_) => getCategories())
           .distinct((a, b) => listEquals(a, b));
     }
@@ -136,7 +139,10 @@ class FirebaseService {
   // Animals
   Stream<List<Animal>> getAnimalsStream(String categoryId) {
     if (_preferRestRead) {
-      return Stream<int>.periodic(const Duration(seconds: 2), (i) => i)
+      final poll = _preferRestOnDesktop
+          ? const Duration(seconds: 2)
+          : const Duration(seconds: 30);
+      return Stream<int>.periodic(poll, (i) => i)
           .asyncMap<List<Animal>>((_) => getAnimals(categoryId))
           .distinct((a, b) => listEquals(a, b));
     }
