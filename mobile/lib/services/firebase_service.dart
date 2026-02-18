@@ -70,11 +70,11 @@ class FirebaseService {
     }
     return _firestore!
         .collection('categories')
-        .where('isVisible', isEqualTo: true)
         .orderBy('order')
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => Category.fromFirestore(doc.data(), doc.id))
+            .where((c) => c.isVisible)
             .toList());
   }
 
@@ -105,11 +105,11 @@ class FirebaseService {
     try {
       final snapshot = await _firestore!
           .collection('categories')
-          .where('isVisible', isEqualTo: true)
           .orderBy('order')
           .get();
       final result = snapshot.docs
           .map((doc) => Category.fromFirestore(doc.data(), doc.id))
+          .where((c) => c.isVisible)
           .toList();
       if (result.isNotEmpty) {
         return result;
@@ -165,11 +165,11 @@ class FirebaseService {
         .collection('categories')
         .doc(categoryId)
         .collection('animals')
-        .where('isVisible', isEqualTo: true)
         .orderBy('order')
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => Animal.fromFirestore(doc.data(), doc.id, categoryId))
+            .where((a) => a.isVisible)
             .toList());
   }
 
@@ -202,11 +202,11 @@ class FirebaseService {
           .collection('categories')
           .doc(categoryId)
           .collection('animals')
-          .where('isVisible', isEqualTo: true)
           .orderBy('order')
           .get();
       final result = snapshot.docs
           .map((doc) => Animal.fromFirestore(doc.data(), doc.id, categoryId))
+          .where((a) => a.isVisible)
           .toList();
       if (result.isNotEmpty) {
         return result;
