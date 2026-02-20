@@ -17,7 +17,7 @@ const FALLBACK_CATEGORIES: Array<Record<string, unknown>> = [
     title: { ru: 'Питомцы', en: 'Pets' },
     tabIconAssetPath: '',
     heroImageAssetPath: 'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img/%D0%93%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F%20%D0%BF%D0%B8%D0%BA%D1%87%D0%B0.png',
-    heroVideoAssetPath: 'http://168.222.193.86/uploads/categories/hero/seed_pets_hero.mp4',
+    heroVideoAssetPath: 'http://168.222.193.86/uploads/onboarding/seed_slide2.mp4',
     backgroundColorHex: '#66AEF8',
   },
   {
