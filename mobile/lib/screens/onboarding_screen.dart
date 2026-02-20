@@ -164,12 +164,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_showIntroVideo && _introController != null && _introController!.value.isInitialized) {
       return Scaffold(
         backgroundColor: Colors.black,
-        body: FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: _introController!.value.size.width,
-            height: _introController!.value.size.height,
-            child: VideoPlayer(_introController!),
+        body: SizedBox.expand(
+          child: ClipRect(
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _introController!.value.size.width,
+                height: _introController!.value.size.height,
+                child: VideoPlayer(_introController!),
+              ),
+            ),
           ),
         ),
       );
