@@ -23,6 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final Map<int, VideoPlayerController> _videoControllers = {};
   VideoPlayerController? _introController;
   bool _showIntroVideo = true;
+  bool _introCompleted = false;
 
   List<OnboardingPage> _pages = [
     const OnboardingPage(
@@ -59,9 +60,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       final c = VideoPlayerController.networkUrl(Uri.parse(_introVideoUrl));
       await c.initialize();
-      await c.setLooping(true);
+      await c.setLooping(false);
       await c.setVolume(0);
       await c.play();
+      c.addListener(() {
+        if (!mounted || _introCompleted || !c.value.isInitialized) return;
+        final pos = c.value.position;
+        final dur = c.value.duration;
+        if (dur > Duration.zero && pos >= dur - const Duration(milliseconds: 120)) {
+          _introCompleted = true;
+          setState(() {
+            _showIntroVideo = false;
+          });
+        }
+      });
       if (!mounted) {
         await c.dispose();
         return;
@@ -152,50 +164,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_showIntroVideo && _introController != null && _introController!.value.isInitialized) {
       return Scaffold(
         backgroundColor: Colors.black,
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _introController!.value.size.width,
-                  height: _introController!.value.size.height,
-                  child: VideoPlayer(_introController!),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => setState(() => _showIntroVideo = false),
-              ),
-            ),
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: 36,
-              child: SizedBox(
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () => setState(() => _showIntroVideo = false),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1479EE),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    AppStrings.t(context, 'onboarding.continue'),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontFamily: 'SF Pro Rounded',
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        body: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: _introController!.value.size.width,
+            height: _introController!.value.size.height,
+            child: VideoPlayer(_introController!),
+          ),
         ),
       );
     }
