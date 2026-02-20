@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:video_player/video_player.dart';
 import '../utils/app_strings.dart';
 import '../services/firebase_service.dart';
 
@@ -17,6 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   static const String _contentBaseUrl = 'http://168.222.193.86';
   int _currentPage = 0;
+  final Map<int, VideoPlayerController> _videoControllers = {};
 
   List<OnboardingPage> _pages = [
     const OnboardingPage(
@@ -82,8 +84,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   void dispose() {
+    for (final c in _videoControllers.values) {
+      c.dispose();
+    }
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<VideoPlayerController?> _controllerForPage(int index) async {
+    final existing = _videoControllers[index];
+    if (existing != null) return existing;
+    if (index < 0 || index >= _pages.length) return null;
+    final path = _pages[index].imageAssetPath;
+    if (!(path.endsWith('.mp4') || path.contains('.mp4?'))) return null;
+    try {
+      final c = VideoPlayerController.networkUrl(Uri.parse(path));
+      await c.initialize();
+      await c.setLooping(true);
+      await c.setVolume(0);
+      await c.play();
+      _videoControllers[index] = c;
+      return c;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _completeOnboarding() async {
@@ -103,11 +127,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           children: [
             Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _pages.length,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemBuilder: (context, index) => _OnboardingPageView(page: _pages[index]),
+              child: FutureBuilder<List<VideoPlayerController?>>(
+                future: Future.wait(
+                  List.generate(_pages.length, (i) => _controllerForPage(i)),
+                ),
+                builder: (context, snapshot) {
+                  final ctrls = snapshot.data ?? const <VideoPlayerController?>[];
+                  return PageView.builder(
+                    controller: _pageController,
+                    itemCount: _pages.length,
+                    onPageChanged: (index) => setState(() => _currentPage = index),
+                    itemBuilder: (context, index) => _OnboardingPageView(
+                      page: _pages[index],
+                      videoController: index < ctrls.length ? ctrls[index] : null,
+                    ),
+                  );
+                },
               ),
             ),
             Row(
@@ -190,8 +225,9 @@ class OnboardingPage {
 
 class _OnboardingPageView extends StatelessWidget {
   final OnboardingPage page;
+  final VideoPlayerController? videoController;
 
-  const _OnboardingPageView({required this.page});
+  const _OnboardingPageView({required this.page, this.videoController});
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +248,19 @@ class _OnboardingPageView extends StatelessWidget {
         child: Column(
           children: [
           const Spacer(),
-          if (page.imageAssetPath.isNotEmpty)
+          if (videoController != null && videoController!.value.isInitialized)
+            SizedBox(
+              height: 260,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
+                  width: videoController!.value.size.width,
+                  height: videoController!.value.size.height,
+                  child: VideoPlayer(videoController!),
+                ),
+              ),
+            )
+          else if (page.imageAssetPath.isNotEmpty)
             CachedNetworkImage(
               imageUrl: page.imageAssetPath,
               fit: BoxFit.contain,

@@ -13,6 +13,7 @@ export interface Category {
   title: LocalizedString;
   tabIconAssetPath: string; // Storage path (или legacy url)
   heroImageAssetPath?: string;
+  heroVideoAssetPath?: string;
   backgroundColorHex?: string;
   gridCardStyle?: {
     backgroundColor?: string;

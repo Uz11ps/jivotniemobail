@@ -9,6 +9,7 @@ class Category extends Equatable {
   final String? iapProductId;
   final String tabIconAssetPath;
   final String? heroImageAssetPath;
+  final String? heroVideoAssetPath;
   final String? backgroundColorHex;
 
   const Category({
@@ -20,6 +21,7 @@ class Category extends Equatable {
     this.iapProductId,
     required this.tabIconAssetPath,
     this.heroImageAssetPath,
+    this.heroVideoAssetPath,
     this.backgroundColorHex,
   });
 
@@ -33,6 +35,7 @@ class Category extends Equatable {
       iapProductId: data['iapProductId'],
       tabIconAssetPath: data['tabIconAssetPath'] ?? '',
       heroImageAssetPath: data['heroImageAssetPath'],
+      heroVideoAssetPath: data['heroVideoAssetPath'],
       backgroundColorHex: data['backgroundColorHex'],
     );
   }
@@ -46,6 +49,7 @@ class Category extends Equatable {
       'iapProductId': iapProductId,
       'tabIconAssetPath': tabIconAssetPath,
       'heroImageAssetPath': heroImageAssetPath,
+      'heroVideoAssetPath': heroVideoAssetPath,
       'backgroundColorHex': backgroundColorHex,
     };
   }
@@ -59,6 +63,7 @@ class Category extends Equatable {
     String? iapProductId,
     String? tabIconAssetPath,
     String? heroImageAssetPath,
+    String? heroVideoAssetPath,
     String? backgroundColorHex,
   }) {
     return Category(
@@ -70,6 +75,7 @@ class Category extends Equatable {
       iapProductId: iapProductId ?? this.iapProductId,
       tabIconAssetPath: tabIconAssetPath ?? this.tabIconAssetPath,
       heroImageAssetPath: heroImageAssetPath ?? this.heroImageAssetPath,
+      heroVideoAssetPath: heroVideoAssetPath ?? this.heroVideoAssetPath,
       backgroundColorHex: backgroundColorHex ?? this.backgroundColorHex,
     );
   }
@@ -84,6 +90,7 @@ class Category extends Equatable {
         iapProductId,
         tabIconAssetPath,
         heroImageAssetPath,
+        heroVideoAssetPath,
         backgroundColorHex,
       ];
 }

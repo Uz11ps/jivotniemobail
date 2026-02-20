@@ -25,6 +25,7 @@ const categorySchema = z.object({
   // Разрешаем пустое значение, чтобы можно было засеять Firestore и заполнять медиа постепенно.
   tabIconAssetPath: z.string().optional(),
   heroImageAssetPath: z.string().optional(),
+  heroVideoAssetPath: z.string().optional(),
   backgroundColorHex: z.string().optional(),
 });
 
@@ -44,6 +45,7 @@ function CategoriesContent() {
       title: { ru: '', en: '' },
       tabIconAssetPath: '',
       heroImageAssetPath: '',
+      heroVideoAssetPath: '',
       backgroundColorHex: '#66AEF8',
     },
   });
@@ -54,6 +56,7 @@ function CategoriesContent() {
         ...data,
         tabIconAssetPath: data.tabIconAssetPath || '',
         heroImageAssetPath: data.heroImageAssetPath || '',
+        heroVideoAssetPath: data.heroVideoAssetPath || '',
         backgroundColorHex: data.backgroundColorHex || '#66AEF8',
       };
       if (editingId) {
@@ -99,6 +102,7 @@ function CategoriesContent() {
                 title: { ru: '', en: '' },
                 tabIconAssetPath: '',
                 heroImageAssetPath: '',
+                heroVideoAssetPath: '',
                 backgroundColorHex: '#66AEF8',
               });
             }}
@@ -168,6 +172,27 @@ function CategoriesContent() {
                     src={getFileUrlFromPathOrUrl(hero)}
                     alt="Hero"
                     className="w-40 h-24 mt-2 rounded object-contain bg-slate-50"
+                  />
+                );
+              })()}
+            </div>
+
+            <div className="mb-4">
+              <StorageFileUpload
+                path={`categories/hero/${Date.now()}.mp4`}
+                value={watch('heroVideoAssetPath')}
+                onUploaded={(meta) => setValue('heroVideoAssetPath', meta.url)}
+                accept="video/mp4,video/*"
+                label="Видео для главного блока категории (опционально)"
+              />
+              {(() => {
+                const video = watch('heroVideoAssetPath');
+                if (!video) return null;
+                return (
+                  <video
+                    src={getFileUrlFromPathOrUrl(video)}
+                    controls
+                    className="w-56 mt-2 rounded bg-slate-50"
                   />
                 );
               })()}

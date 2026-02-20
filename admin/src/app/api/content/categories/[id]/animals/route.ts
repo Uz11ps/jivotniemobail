@@ -44,7 +44,14 @@ const FALLBACK_ANIMALS: Record<string, Array<Record<string, unknown>>> = {
   ],
   farm: [
     { id: 'cow', order: 0, isVisible: true, name: { ru: 'Корова', en: 'Cow' }, topText: { ru: 'Корова', en: 'Cow' } },
-    { id: 'pig', order: 1, isVisible: true, name: { ru: 'Свинья', en: 'Pig' }, topText: { ru: 'Свинья', en: 'Pig' } },
+    {
+      id: 'pig',
+      order: 1,
+      isVisible: true,
+      name: { ru: 'Свинья', en: 'Pig' },
+      topText: { ru: 'Свинья', en: 'Pig' },
+      bgVideoAssetPath: 'http://168.222.193.86/uploads/animals/backgroundVideo/seed_pig.mp4',
+    },
     { id: 'goat', order: 2, isVisible: true, name: { ru: 'Коза', en: 'Goat' }, topText: { ru: 'Коза', en: 'Goat' } },
   ],
   forest: [],

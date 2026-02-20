@@ -21,7 +21,7 @@ const FALLBACK = [
     isActive: true,
     title: { ru: "LET'S LISTEN!", en: "LET'S LISTEN!" },
     subtitle: { ru: 'Звуки и анимации животных', en: 'Animal sounds and animations' },
-    imageAssetPath: '',
+    imageAssetPath: 'http://168.222.193.86/uploads/onboarding/seed_slide2.mp4',
     backgroundColorHex: '#F0F2F5',
   },
   {

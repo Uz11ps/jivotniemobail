@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../models/animal.dart';
@@ -60,6 +61,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   };
 
   String? _selectedCategoryId;
+  VideoPlayerController? _heroVideoController;
+  String? _heroVideoSource;
 
   @override
   void initState() {
@@ -76,6 +79,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     }
     setState(() => _selectedCategoryId = categoryId);
     await context.read<AnimalsProvider>().loadAnimals(categoryId);
+  }
+
+  @override
+  void dispose() {
+    _heroVideoController?.dispose();
+    super.dispose();
   }
 
   String _emojiForAnimal(Animal animal) {
@@ -171,6 +180,39 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       );
     }
     return fallback;
+  }
+
+  Future<void> _syncHeroVideo(models.Category selectedCategory) async {
+    final raw = selectedCategory.heroVideoAssetPath?.trim();
+    final url = (raw == null || raw.isEmpty)
+        ? null
+        : (raw.startsWith('/') ? '$_contentBaseUrl$raw' : raw);
+    if (url == _heroVideoSource) return;
+    _heroVideoSource = url;
+    await _heroVideoController?.dispose();
+    _heroVideoController = null;
+    if (url == null || !(url.startsWith('http://') || url.startsWith('https://'))) {
+      if (mounted) setState(() {});
+      return;
+    }
+    try {
+      final c = VideoPlayerController.networkUrl(Uri.parse(url));
+      await c.initialize();
+      await c.setLooping(true);
+      await c.setVolume(0);
+      await c.play();
+      if (!mounted) {
+        await c.dispose();
+        return;
+      }
+      setState(() {
+        _heroVideoController = c;
+      });
+    } catch (_) {
+      await _heroVideoController?.dispose();
+      _heroVideoController = null;
+      if (mounted) setState(() {});
+    }
   }
 
   String? _heroImagePath(models.Category selectedCategory) {
@@ -544,6 +586,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               (category) => category.id == effectiveSelectedId,
               orElse: () => categories.first,
             );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _syncHeroVideo(selectedCategory);
+            });
             final locale = LocaleHelper.getCurrentLocale(context);
             final bgColor = _backgroundColor(selectedCategory);
 
@@ -565,6 +610,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   height: 180,
                   child: Builder(
                     builder: (context) {
+                      if (_heroVideoController != null &&
+                          _heroVideoController!.value.isInitialized) {
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _heroVideoController!.value.size.width,
+                              height: _heroVideoController!.value.size.height,
+                              child: VideoPlayer(_heroVideoController!),
+                            ),
+                          ),
+                        );
+                      }
                       final heroPath = _heroImagePath(selectedCategory);
                       if (heroPath != null) {
                         if (heroPath.startsWith('http://') || heroPath.startsWith('https://')) {
