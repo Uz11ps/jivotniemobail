@@ -17,8 +17,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   final FirebaseService _firebaseService = FirebaseService();
   static const String _contentBaseUrl = 'http://168.222.193.86';
+  static const String _introVideoUrl =
+      'http://168.222.193.86/uploads/categories/hero/seed_pets_hero.mp4';
   int _currentPage = 0;
   final Map<int, VideoPlayerController> _videoControllers = {};
+  VideoPlayerController? _introController;
+  bool _showIntroVideo = true;
 
   List<OnboardingPage> _pages = [
     const OnboardingPage(
@@ -47,7 +51,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
+    _initIntroVideo();
     _loadOnboardingFromAdmin();
+  }
+
+  Future<void> _initIntroVideo() async {
+    try {
+      final c = VideoPlayerController.networkUrl(Uri.parse(_introVideoUrl));
+      await c.initialize();
+      await c.setLooping(true);
+      await c.setVolume(0);
+      await c.play();
+      if (!mounted) {
+        await c.dispose();
+        return;
+      }
+      setState(() {
+        _introController = c;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _showIntroVideo = false;
+      });
+    }
   }
 
   Future<void> _loadOnboardingFromAdmin() async {
@@ -84,6 +111,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   void dispose() {
+    _introController?.dispose();
     for (final c in _videoControllers.values) {
       c.dispose();
     }
@@ -121,6 +149,56 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (_showIntroVideo && _introController != null && _introController!.value.isInitialized) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _introController!.value.size.width,
+                  height: _introController!.value.size.height,
+                  child: VideoPlayer(_introController!),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _showIntroVideo = false),
+              ),
+            ),
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: 36,
+              child: SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () => setState(() => _showIntroVideo = false),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1479EE),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    AppStrings.t(context, 'onboarding.continue'),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontFamily: 'SF Pro Rounded',
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
       body: SafeArea(
