@@ -24,6 +24,8 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   static const String _contentBaseUrl = 'http://168.222.193.86';
+  static const String _petsHeroVideoFallback =
+      'http://168.222.193.86/uploads/onboarding/seed_slide2.mp4';
   static const String _avatarBasePath = r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img';
   static const String _repoImgBaseUrl =
       'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
@@ -183,7 +185,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Future<void> _syncHeroVideo(models.Category selectedCategory) async {
-    final raw = selectedCategory.heroVideoAssetPath?.trim();
+    final title = selectedCategory.title.ru.toLowerCase();
+    var raw = selectedCategory.heroVideoAssetPath?.trim();
+    // Фолбэк: для "Питомцы" принудительно показываем видео,
+    // даже если в текущем документе категории поле еще пустое.
+    if ((raw == null || raw.isEmpty) && title.contains('питом')) {
+      raw = _petsHeroVideoFallback;
+    }
     final url = (raw == null || raw.isEmpty)
         ? null
         : (raw.startsWith('/') ? '$_contentBaseUrl$raw' : raw);
