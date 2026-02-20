@@ -30,7 +30,7 @@ const FALLBACK_CATEGORIES: Array<Record<string, unknown>> = [
     title: { ru: 'Ферма', en: 'Farm' },
     tabIconAssetPath: '',
     heroImageAssetPath: '',
-    heroVideoAssetPath: '',
+    heroVideoAssetPath: 'http://168.222.193.86/uploads/categories/hero/farm_hero_loop.mp4',
     backgroundColorHex: '#F5A623',
   },
   {
