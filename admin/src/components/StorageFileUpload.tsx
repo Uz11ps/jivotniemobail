@@ -43,26 +43,29 @@ export function StorageFileUpload({
   };
 
   return (
-    <div>
-      {label && <label className="block text-sm font-medium mb-2">{label}</label>}
+    <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+      {label && <label className="mb-2 block text-sm font-semibold text-slate-800">{label}</label>}
       <input
         type="file"
         accept={accept}
         onChange={handleFileChange}
         disabled={uploading}
-        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-2xl file:border-0 file:bg-slate-900 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700"
       />
-      {uploading && <p className="text-sm text-gray-500 mt-1">Загрузка...</p>}
+      <div className="mt-2 text-xs text-slate-400">
+        Поддерживается загрузка изображений, видео и аудио. Новый файл сразу заменит текущее значение.
+      </div>
+      {uploading && <p className="mt-2 text-sm font-medium text-slate-500">Загрузка...</p>}
       {previewUrl && (
-        <div className="mt-2">
+        <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3">
           {previewUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-            <img src={previewUrl} alt="Preview" className="max-w-xs rounded" />
+            <img src={previewUrl} alt="Preview" className="max-h-40 max-w-xs rounded-2xl object-contain" />
           ) : previewUrl.match(/\.(mp4|webm|mov)$/i) ? (
-            <video src={previewUrl} controls className="max-w-xs rounded" />
+            <video src={previewUrl} controls className="max-h-40 max-w-xs rounded-2xl" />
           ) : previewUrl.match(/\.(mp3|wav|m4a|aac|ogg)$/i) ? (
             <audio src={previewUrl} controls className="w-full" />
           ) : (
-            <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600">
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600">
               Просмотр файла
             </a>
           )}

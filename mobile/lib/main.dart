@@ -9,6 +9,7 @@ import 'providers/animals_provider.dart';
 import 'providers/purchase_provider.dart';
 import 'providers/locale_provider.dart';
 import 'utils/app_router.dart';
+import 'widgets/app_error_fallback.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,10 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
+
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return AppErrorFallback(error: details.exception);
+  };
 
   runApp(const MyApp());
 }
@@ -78,6 +83,8 @@ class MyApp extends StatelessWidget {
             supportedLocales: const [
               Locale('ru', 'RU'),
               Locale('en', 'US'),
+              Locale('es', 'ES'),
+              Locale('hi', 'IN'),
             ],
             locale: localeProvider.locale,
             routerConfig: appRouter,

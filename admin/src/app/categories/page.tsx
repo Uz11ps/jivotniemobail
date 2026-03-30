@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { StorageFileUpload } from '@/components/StorageFileUpload';
 import { getFileUrlFromPathOrUrl } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
+import { AdminShell } from '@/components/AdminShell';
 
 const categorySchema = z.object({
   order: z.number(),
@@ -81,38 +82,53 @@ function CategoriesContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminShell
+      title="Категории"
+      subtitle="Добавляй новые разделы, меняй порядок, загружай tab-иконки, hero-медиа и цветовые схемы категорий."
+      action={
+        <button
+          onClick={() => {
+            setShowForm(true);
+            setEditingId(null);
+            reset({
+              order: categories.length,
+              isVisible: true,
+              isPaid: false,
+              priceRub: null,
+              title: { ru: '', en: '' },
+              tabIconAssetPath: '',
+              heroImageAssetPath: '',
+              heroVideoAssetPath: '',
+              backgroundColorHex: '#66AEF8',
+            });
+          }}
+          className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700"
+        >
+          Добавить категорию
+        </button>
+      }
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          { label: 'Всего категорий', value: String(categories.length) },
+          { label: 'Видимых', value: String(categories.filter((category) => category.isVisible).length) },
+          { label: 'Платных', value: String(categories.filter((category) => category.isPaid).length) },
+        ].map((item) => (
+          <div key={item.label} className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5">
+            <div className="text-sm font-semibold text-slate-500">{item.label}</div>
+            <div className="mt-3 text-3xl font-black tracking-tight text-slate-900">{item.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8">
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-900">
+          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
             Ошибка загрузки категорий: {error}
           </div>
         )}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Категории</h1>
-          <button
-            onClick={() => {
-              setShowForm(true);
-              setEditingId(null);
-              reset({
-                order: categories.length,
-                isVisible: true,
-                isPaid: false,
-                priceRub: null,
-                title: { ru: '', en: '' },
-                tabIconAssetPath: '',
-                heroImageAssetPath: '',
-                heroVideoAssetPath: '',
-                backgroundColorHex: '#66AEF8',
-              });
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Добавить категорию
-          </button>
-        </div>
 
-        {(showForm || editingId) && (
+        {(showForm || editingId) ? (
           <form
             onSubmit={handleSubmit(onSubmit)}
             onKeyDown={(e) => {
@@ -120,26 +136,26 @@ function CategoriesContent() {
                 e.preventDefault();
               }
             }}
-            className="bg-white p-6 rounded-lg shadow mb-6"
+            className="mb-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm"
           >
-            <h2 className="text-lg font-semibold mb-4">
+            <h2 className="mb-5 text-2xl font-black tracking-tight text-slate-900">
               {editingId ? 'Редактировать категорию' : 'Новая категория'}
             </h2>
             
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium mb-1">Название (RU)</label>
-                <input {...register('title.ru')} className="w-full border rounded px-3 py-2" />
+                <label className="mb-1 block text-sm font-semibold text-slate-700">Название (RU)</label>
+                <input {...register('title.ru')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" />
                 {errors.title?.ru && <p className="text-red-500 text-sm">{errors.title.ru.message}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Название (EN)</label>
-                <input {...register('title.en')} className="w-full border rounded px-3 py-2" />
+                <label className="mb-1 block text-sm font-semibold text-slate-700">Название (EN)</label>
+                <input {...register('title.en')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" />
                 {errors.title?.en && <p className="text-red-500 text-sm">{errors.title.en.message}</p>}
               </div>
             </div>
 
-            <div className="mb-4">
+            <div className="mt-5 grid gap-5 xl:grid-cols-2">
               <StorageFileUpload
                 path={`categories/icons/${Date.now()}.png`}
                 value={watch('tabIconAssetPath')}
@@ -147,16 +163,6 @@ function CategoriesContent() {
                 accept="image/*"
                 label="Иконка для таба"
               />
-              {watch('tabIconAssetPath') && (
-                <img
-                  src={getFileUrlFromPathOrUrl(watch('tabIconAssetPath'))}
-                  alt="Icon"
-                  className="w-16 h-16 mt-2 rounded"
-                />
-              )}
-            </div>
-
-            <div className="mb-4">
               <StorageFileUpload
                 path={`categories/hero/${Date.now()}.png`}
                 value={watch('heroImageAssetPath')}
@@ -164,20 +170,9 @@ function CategoriesContent() {
                 accept="image/*"
                 label="Картинка над животными"
               />
-              {(() => {
-                const hero = watch('heroImageAssetPath');
-                if (!hero) return null;
-                return (
-                  <img
-                    src={getFileUrlFromPathOrUrl(hero)}
-                    alt="Hero"
-                    className="w-40 h-24 mt-2 rounded object-contain bg-slate-50"
-                  />
-                );
-              })()}
             </div>
 
-            <div className="mb-4">
+            <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
               <StorageFileUpload
                 path={`categories/hero/${Date.now()}.mp4`}
                 value={watch('heroVideoAssetPath')}
@@ -185,68 +180,62 @@ function CategoriesContent() {
                 accept="video/mp4,video/*"
                 label="Видео для главного блока категории (опционально)"
               />
-              {(() => {
-                const video = watch('heroVideoAssetPath');
-                if (!video) return null;
-                return (
-                  <video
-                    src={getFileUrlFromPathOrUrl(video)}
-                    controls
-                    className="w-56 mt-2 rounded bg-slate-50"
+              <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Цвет фона категории</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="color"
+                    value={watch('backgroundColorHex') || '#66AEF8'}
+                    onChange={(e) => setValue('backgroundColorHex', e.target.value)}
+                    className="h-14 w-20 cursor-pointer rounded-2xl border border-slate-200 bg-white p-1"
                   />
-                );
-              })()}
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">{watch('backgroundColorHex') || '#66AEF8'}</div>
+                    <div className="text-xs text-slate-500">Используется на фоне категории в приложении</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Цвет фона категории</label>
-              <input
-                type="color"
-                value={watch('backgroundColorHex') || '#66AEF8'}
-                onChange={(e) => setValue('backgroundColorHex', e.target.value)}
-                className="h-10 w-20 p-1 border rounded"
-              />
-            </div>
-
-            <div className="mb-4">
+            <div className="mt-5 rounded-[28px] border border-slate-200 bg-slate-50 p-5">
               <label className="flex items-center gap-2">
                 <input type="checkbox" {...register('isPaid')} />
-                <span>Платная категория</span>
+                <span className="font-semibold text-slate-800">Платная категория</span>
               </label>
             </div>
 
             {watch('isPaid') && (
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Product ID (StoreKit)</label>
+                  <label className="mb-1 block text-sm font-semibold text-slate-700">Product ID (StoreKit)</label>
                   <input
                     {...register('iapProductId')}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60"
                     placeholder="com.app.category_id"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Цена (₽)</label>
+                  <label className="mb-1 block text-sm font-semibold text-slate-700">Цена (₽)</label>
                   <input
                     type="number"
                     step="1"
                     {...register('priceRub', { valueAsNumber: true })}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60"
                     placeholder="69"
                   />
                 </div>
               </div>
             )}
 
-            <div className="mb-4">
+            <div className="mt-5 rounded-[28px] border border-slate-200 bg-slate-50 p-5">
               <label className="flex items-center gap-2">
                 <input type="checkbox" {...register('isVisible')} />
-                <span>Видима</span>
+                <span className="font-semibold text-slate-800">Видима</span>
               </label>
             </div>
 
-            <div className="flex gap-2">
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <div className="mt-6 flex gap-3">
+              <button type="submit" className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700">
                 Сохранить
               </button>
               <button
@@ -256,67 +245,92 @@ function CategoriesContent() {
                   setEditingId(null);
                   reset();
                 }}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
               >
                 Отмена
               </button>
             </div>
           </form>
-        )}
+        ) : null}
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
           <SortableList
             items={categories}
             onReorder={handleReorder}
             renderItem={(category) => (
-              <div className="flex items-center justify-between p-4 border-b">
-                <div className="flex items-center gap-4">
-                  <span className="font-semibold">{category.title.ru}</span>
+              <div className="rounded-[24px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex items-center gap-4">
+                    {category.tabIconAssetPath ? (
+                      <img
+                        src={getFileUrlFromPathOrUrl(category.tabIconAssetPath)}
+                        alt={category.title.ru}
+                        className="h-14 w-14 rounded-2xl border border-slate-200 bg-white object-contain p-2"
+                      />
+                    ) : (
+                      <div
+                        className="h-14 w-14 rounded-2xl border border-slate-200"
+                        style={{ backgroundColor: category.backgroundColorHex || '#66AEF8' }}
+                      />
+                    )}
+                    <div>
+                      <div className="font-black text-slate-900">{category.title.ru}</div>
+                      <div className="text-sm text-slate-500">{category.title.en}</div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="rounded-full px-3 py-1 text-xs font-bold text-slate-700"
+                    style={{ backgroundColor: `${category.backgroundColorHex || '#66AEF8'}22` }}
+                  >
+                    {category.backgroundColorHex || '#66AEF8'}
+                  </span>
                   {category.isPaid && (
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800">
                       Платная
                     </span>
                   )}
                   {!category.isVisible && (
-                    <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-800">
                       Скрыта
                     </span>
                   )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => router.push(`/categories/${category.id}/animals`)}
-                    className="text-gray-700 hover:text-gray-900"
-                  >
-                    Животные
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingId(category.id!);
-                      setShowForm(true);
-                      reset(category);
-                    }}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Редактировать
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm('Удалить категорию?')) {
-                        deleteCategory(category.id!);
-                      }
-                    }}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Удалить
-                  </button>
-                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      onClick={() => router.push(`/categories/${category.id}/animals`)}
+                      className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Животные
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingId(category.id!);
+                        setShowForm(true);
+                        reset(category);
+                      }}
+                      className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                    >
+                      Редактировать
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm('Удалить категорию?')) {
+                          deleteCategory(category.id!);
+                        }
+                      }}
+                      className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+                    >
+                      Удалить
+                    </button>
+                  </div>
               </div>
             )}
           />
         </div>
       </div>
-    </div>
+    </AdminShell>
   );
 }
 

@@ -26,7 +26,6 @@ import os
 import sys
 import time
 import subprocess
-import socket
 from pathlib import Path
 
 try:
@@ -89,8 +88,8 @@ def deploy() -> None:
     tar_path = _tar_admin(repo_root)
 
     if not PASSWORD:
-        print("DEPLOY_PASSWORD не задан. Задай пароль через переменную окружения.")
-        print("Пример (PowerShell):")
+        print("DEPLOY_PASSWORD is not set. Provide it via environment variable.")
+        print("Example (PowerShell):")
         print('  $env:DEPLOY_PASSWORD="***"; python .\\deploy_admin.py')
         sys.exit(2)
 
@@ -101,7 +100,6 @@ def deploy() -> None:
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            sock = socket.create_connection((SERVER, PORT), timeout=30)
             client.connect(
                 SERVER,
                 PORT,
@@ -112,7 +110,6 @@ def deploy() -> None:
                 auth_timeout=120,
                 look_for_keys=False,
                 allow_agent=False,
-                sock=sock,
             )
             transport = client.get_transport()
             if transport is not None:
@@ -203,6 +200,18 @@ def deploy() -> None:
     run("set -e; mkdir -p /var/www/deti-admin/uploads && chmod 755 /var/www/deti-admin/uploads", check=True)
     # build на сервере НЕ запускаем (сервер слабый, часто OOM).
     # В tar уже лежит .next после локального next build.
+
+    # Синхронизация каталога в Firestore через Admin SDK сервера.
+    code, _, _ = run(f"test -f {REMOTE_DIR}/scripts/sync_catalog.mjs", check=False)
+    if code == 0:
+        code, out, err = run(f"cd {REMOTE_DIR} && node scripts/sync_catalog.mjs", check=False)
+        if code != 0:
+            print("Admin SDK sync unavailable, trying Web SDK fallback...")
+            print((err or out).strip())
+            code2, out2, err2 = run(f"cd {REMOTE_DIR} && node scripts/seed_firestore.mjs", check=False)
+            if code2 != 0:
+                print("Catalog sync skipped: both Admin SDK and Web SDK writes are unavailable.")
+                print((err2 or out2).strip())
 
     # restart
     run("command -v pm2 >/dev/null 2>&1", check=True)

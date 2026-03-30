@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import '../screens/onboarding_screen.dart';
 import '../screens/categories_screen.dart';
 import '../screens/animals_list_screen.dart';
 import '../screens/animal_detail_screen.dart';
@@ -7,15 +6,13 @@ import '../screens/profile_screen.dart';
 import '../screens/settings_order_screen.dart';
 import '../screens/settings_language_screen.dart';
 import '../screens/purchases_screen.dart';
+import '../screens/purchase_offer_screen.dart';
+import '../screens/favorites_screen.dart';
 import '../screens/rate_redirect_screen.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/onboarding',
+  initialLocation: '/categories',
   routes: [
-    GoRoute(
-      path: '/onboarding',
-      builder: (context, state) => const OnboardingScreen(),
-    ),
     GoRoute(
       path: '/categories',
       builder: (context, state) => const CategoriesScreen(),
@@ -53,6 +50,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/purchases',
       builder: (context, state) => const PurchasesScreen(),
+    ),
+    GoRoute(
+      path: '/purchases/offer',
+      builder: (context, state) => const PurchaseOfferScreen(),
+    ),
+    GoRoute(
+      path: '/favorites',
+      builder: (context, state) => const FavoritesScreen(),
     ),
     GoRoute(
       path: '/rate',

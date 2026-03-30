@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,6 +7,7 @@ import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../models/animal.dart';
+import '../models/parental_test.dart';
 import '../models/category.dart' as models;
 import '../providers/categories_provider.dart';
 import '../providers/animals_provider.dart';
@@ -23,16 +25,17 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final FirebaseService _firebaseService = FirebaseService();
+  final Random _random = Random();
   static const String _contentBaseUrl = 'http://168.222.193.86';
-  static const String _petsHeroVideoFallback =
-      'http://168.222.193.86/uploads/onboarding/seed_slide2.mp4';
+  static const String _petsHeroStaticImageUrl =
+      'http://168.222.193.86/uploads/categories/hero/pets_hero_static.png';
   static const String _avatarBasePath = r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img';
   static const String _repoImgBaseUrl =
       'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
   static const String _heroImagePrimaryPath =
-      r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Главная пикча.png';
+      r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Category Video.png';
   static const String _heroImageFallbackPath =
-      '$_repoImgBaseUrl/%D0%93%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F%20%D0%BF%D0%B8%D0%BA%D1%87%D0%B0.png';
+      '$_repoImgBaseUrl/Category%20Video.png';
   static const String _headerPetsPrimaryPath =
       r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Frame 43.png';
   static const String _headerPetsFallbackPath =
@@ -41,10 +44,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Icon.png';
   static const String _profileIconFallbackPath =
       '$_repoImgBaseUrl/Icon.png';
+  static const String _warningPrimaryPath =
+      r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\⚠️ Warning.png';
   static const String _lockVectorPrimaryPath =
       r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Vector (2).png';
   static const String _lockVectorFallbackPath =
       '$_repoImgBaseUrl/Vector%20%282%29.png';
+  static const String _petsTopIconPrimaryPath =
+      r'C:\Users\1\Desktop\cursor\detiiosjivotnie\img\Property 1=Pets, Size=XL.png';
+  static const String _petsTopIconFallbackPath =
+      '$_repoImgBaseUrl/Property%201%3DPets%2C%20Size%3DXL.png';
 
   static const Map<String, String> _animalAvatarByKey = {
     'кот': 'Frame 50.png',
@@ -60,6 +69,29 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     'улит': 'Frame 59.png',
     'ляг': 'Frame 60.png',
     'хор': 'Frame 61.png',
+  };
+
+  static const Map<String, String> _categoryNavIconByKey = {
+    'питом': 'Property 1=Pets, Size=XL.png',
+    'pets': 'Property 1=Pets, Size=XL.png',
+    'ферм': 'Property 1=Farm, Size=XL.png',
+    'farm': 'Property 1=Farm, Size=XL.png',
+    'джунг': 'Property 1=Jungle, Size=XL.png',
+    'jungle': 'Property 1=Jungle, Size=XL.png',
+    'пруд': 'Pond\\Tab bar category image.png',
+    'poud': 'Pond\\Tab bar category image.png',
+    'pond': 'Pond\\Tab bar category image.png',
+    'саван': 'Savannah\\Categories icons.png',
+    'savannah': 'Savannah\\Categories icons.png',
+    'лес': 'Property 1=Forest, Size=XL.png',
+    'forest': 'Property 1=Forest, Size=XL.png',
+  };
+  static const Map<String, String> _categoryFolderById = {
+    'farm': 'farm',
+    'forest': 'forest',
+    'savannah': 'Savannah',
+    'pond': 'Pond',
+    'jungle': 'Jungle',
   };
 
   String? _selectedCategoryId;
@@ -136,6 +168,31 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return null;
   }
 
+  String? _localCategoryFolder(models.Category category) {
+    return _categoryFolderById[category.id];
+  }
+
+  String? _localPreviewPathForAnimal(Animal animal) {
+    final folder = _categoryFolderById[animal.categoryId];
+    if (folder == null) return null;
+    final fileName = _localPreviewFileName(animal);
+    if (fileName == null) return null;
+    final path = '$_avatarBasePath\\$folder\\$fileName';
+    if (File(path).existsSync()) {
+      return path;
+    }
+    return null;
+  }
+
+  String? _localPreviewFileName(Animal animal) {
+    if (animal.categoryId == 'farm') {
+      if (animal.order == 0) return 'Animal Card.png';
+      if (animal.order == 1) return 'Image.png';
+      return 'Image${animal.order - 1}.png';
+    }
+    return animal.order == 0 ? 'Image.png' : 'Image${animal.order}.png';
+  }
+
   String _emojiForCategory(models.Category category) {
     final value = category.title.ru.toLowerCase();
     if (value.contains('питом')) return '🐱';
@@ -161,12 +218,57 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Widget _categoryIconWidget(models.Category category) {
-    final iconRaw = category.tabIconAssetPath.trim();
-    final iconPath = iconRaw.startsWith('/') ? '$_contentBaseUrl$iconRaw' : iconRaw;
+    String remoteByFileName(String fileName) =>
+        '$_repoImgBaseUrl/${Uri.encodeComponent(fileName.replaceAll('\\', '/'))}';
+
+    Widget iconByFileName(String fileName, Widget fallback) {
+      final localPath = '$_avatarBasePath\\$fileName';
+      if (File(localPath).existsSync()) {
+        return ClipOval(
+          child: SizedBox(
+            width: 42,
+            height: 42,
+            child: Image.file(
+              File(localPath),
+              fit: BoxFit.contain,
+            ),
+          ),
+        );
+      }
+      final remotePath = remoteByFileName(fileName);
+      return ClipOval(
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: CachedNetworkImage(
+            imageUrl: remotePath,
+            fit: BoxFit.contain,
+            placeholder: (context, url) => const SizedBox.shrink(),
+            errorWidget: (context, url, error) => fallback,
+          ),
+        ),
+      );
+    }
+
     final fallback = Text(
       _emojiForCategory(category),
       style: const TextStyle(fontSize: 34),
     );
+
+    // Для блока Pets всегда используем переданную иконку.
+    if (category.id.toLowerCase() == 'pets' || _isPetsCategory(category)) {
+      return iconByFileName('Property 1=Pets, Size=XL.png', fallback);
+    }
+
+    final title = '${category.title.ru} ${category.title.en}'.toLowerCase();
+    for (final entry in _categoryNavIconByKey.entries) {
+      if (title.contains(entry.key)) {
+        return iconByFileName(entry.value, fallback);
+      }
+    }
+
+    final iconRaw = category.tabIconAssetPath.trim();
+    final iconPath = iconRaw.startsWith('/') ? '$_contentBaseUrl$iconRaw' : iconRaw;
     if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
       return ClipOval(
         child: SizedBox(
@@ -184,14 +286,39 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return fallback;
   }
 
+  bool _isPetsCategory(models.Category category) {
+    final all = '${category.id} ${category.title.ru} ${category.title.en}'.toLowerCase();
+    return all.contains('pets') || all.contains('питом');
+  }
+
+  String? _petsTopIconPath() {
+    return _firstExistingPath([
+      _petsTopIconPrimaryPath,
+      _petsTopIconFallbackPath,
+    ]);
+  }
+
   Future<void> _syncHeroVideo(models.Category selectedCategory) async {
-    final title = selectedCategory.title.ru.toLowerCase();
-    var raw = selectedCategory.heroVideoAssetPath?.trim();
-    // Фолбэк: для "Питомцы" принудительно показываем видео,
-    // даже если в текущем документе категории поле еще пустое.
-    if ((raw == null || raw.isEmpty) && title.contains('питом')) {
-      raw = _petsHeroVideoFallback;
+    if (_isPetsCategory(selectedCategory)) {
+      // Для Pets всегда статичная картинка без hero video.
+      _heroVideoSource = null;
+      await _heroVideoController?.dispose();
+      _heroVideoController = null;
+      if (mounted) setState(() {});
+      return;
     }
+    final localFolder = _localCategoryFolder(selectedCategory);
+    if (localFolder != null) {
+      final localHero = '$_avatarBasePath\\$localFolder\\Video.png';
+      if (File(localHero).existsSync()) {
+        _heroVideoSource = null;
+        await _heroVideoController?.dispose();
+        _heroVideoController = null;
+        if (mounted) setState(() {});
+        return;
+      }
+    }
+    var raw = selectedCategory.heroVideoAssetPath?.trim();
     final url = (raw == null || raw.isEmpty)
         ? null
         : (raw.startsWith('/') ? '$_contentBaseUrl$raw' : raw);
@@ -224,6 +351,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   String? _heroImagePath(models.Category selectedCategory) {
+    final localFolder = _localCategoryFolder(selectedCategory);
+    if (localFolder != null) {
+      final localHero = '$_avatarBasePath\\$localFolder\\Video.png';
+      if (File(localHero).existsSync()) {
+        return localHero;
+      }
+    }
+    if (_isPetsCategory(selectedCategory)) {
+      return _petsHeroStaticImageUrl;
+    }
     final fromAdmin = selectedCategory.heroImageAssetPath?.trim();
     if (fromAdmin != null && fromAdmin.isNotEmpty) {
       return fromAdmin.startsWith('/') ? '$_contentBaseUrl$fromAdmin' : fromAdmin;
@@ -235,6 +372,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Color _backgroundColor(models.Category selectedCategory) {
+    final all = '${selectedCategory.id} ${selectedCategory.title.ru} ${selectedCategory.title.en}'
+        .toLowerCase();
+    if (all.contains('forest') || all.contains('лес')) {
+      return const Color(0xFF4C8C2B);
+    }
+    if (all.contains('jungle') || all.contains('джунг')) {
+      return const Color(0xFF7FC64F);
+    }
+    if (all.contains('savannah') || all.contains('саван')) {
+      return const Color(0xFFF7D15E);
+    }
+    if (all.contains('pond') || all.contains('poud') || all.contains('пруд')) {
+      return const Color(0xFF86D6D9);
+    }
     final raw = selectedCategory.backgroundColorHex?.trim() ?? '';
     final hex = raw.replaceAll('#', '').toUpperCase();
     if (hex.length == 6) {
@@ -302,30 +453,55 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Widget _headerTitle(models.Category selectedCategory, String locale) {
-    final isPets = selectedCategory.title.ru.toLowerCase().contains('питом');
+    final isPets = _isPetsCategory(selectedCategory);
     if (isPets) {
-      final path = _petsHeaderPath();
+      final path = _petsTopIconPath();
       if (path != null) {
-        if (path.startsWith('http://') || path.startsWith('https://')) {
-          return CachedNetworkImage(
-            imageUrl: path,
-            height: 26,
-            fit: BoxFit.contain,
-            placeholder: (context, url) => const SizedBox.shrink(),
-            errorWidget: (context, url, error) => const SizedBox.shrink(),
-          );
-        }
-        return Image.file(
-          File(path),
-          height: 26,
-          fit: BoxFit.contain,
+        final iconWidget = path.startsWith('http://') || path.startsWith('https://')
+            ? CachedNetworkImage(
+                imageUrl: path,
+                width: 34,
+                height: 34,
+                fit: BoxFit.contain,
+                placeholder: (context, url) => const SizedBox.shrink(),
+                errorWidget: (context, url, error) => const Icon(
+                  Icons.pets,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              )
+            : Image.file(
+                File(path),
+                width: 34,
+                height: 34,
+                fit: BoxFit.contain,
+              );
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            iconWidget,
+            const SizedBox(width: 8),
+            const Text(
+              'Pets',
+              style: TextStyle(
+                fontFamily: 'SF Pro Rounded',
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
         );
       }
     }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.home_rounded, color: Colors.white, size: 20),
+        SizedBox(
+          width: 26,
+          height: 26,
+          child: _categoryIconWidget(selectedCategory),
+        ),
         const SizedBox(width: 6),
         Text(
           selectedCategory.title.getLocalized(locale),
@@ -352,10 +528,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             Positioned(
               right: 0,
               child: GestureDetector(
-                onTap: () => context.go('/profile'),
+                onTap: _openProfileWithParentalControl,
                 child: Container(
-                  width: 46,
-                  height: 46,
+                  width: 40,
+                  height: 40,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white,
@@ -368,22 +544,22 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         if (path.startsWith('http://') || path.startsWith('https://')) {
                           return CachedNetworkImage(
                             imageUrl: path,
-                            width: 22,
-                            height: 22,
+                            width: 24,
+                            height: 24,
                             fit: BoxFit.contain,
                             placeholder: (context, url) => const SizedBox.shrink(),
                             errorWidget: (context, url, error) =>
-                                const Icon(Icons.person, color: Color(0xFF2B6CB0), size: 28),
+                                const Icon(Icons.person, color: Color(0xFF2B6CB0), size: 24),
                           );
                         }
                         return Image.file(
                           File(path),
-                          width: 22,
-                          height: 22,
+                          width: 24,
+                          height: 24,
                           fit: BoxFit.contain,
                         );
                       }
-                      return const Icon(Icons.person, color: Color(0xFF2B6CB0), size: 28);
+                      return const Icon(Icons.person, color: Color(0xFF2B6CB0), size: 24);
                     },
                   ),
                 ),
@@ -403,6 +579,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final preview = (previewRaw != null && previewRaw.startsWith('/'))
         ? '$_contentBaseUrl$previewRaw'
         : previewRaw;
+    final localPreview = _localPreviewPathForAnimal(animal);
     if (preview != null && (preview.startsWith('http://') || preview.startsWith('https://'))) {
       avatar = CachedNetworkImage(
         imageUrl: preview,
@@ -411,6 +588,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         errorWidget: (context, url, error) =>
             Text(_emojiForAnimal(animal), style: const TextStyle(fontSize: 40)),
       );
+    } else if (localPreview != null) {
+      avatar = Image.file(File(localPreview), fit: BoxFit.contain);
     } else if (avatarPath != null) {
       if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
         avatar = CachedNetworkImage(
@@ -432,31 +611,24 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       avatar = Text(_emojiForAnimal(animal), style: const TextStyle(fontSize: 40));
     }
 
-    // По фигме: 75x75, круглый фон #FFFFFF 30%, мордочка поверх круга.
+    // По макету: 80.5x92, скругленный прямоугольник, Fill/Secondary 40%.
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 75,
-        height: 75,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 75,
-              height: 75,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.30),
-              ),
-            ),
-            // Не даем аватарке вылезать за пределы ячейки (иначе визуально "дублируется"/налезает).
-            SizedBox(
-              width: 70,
-              height: 70,
+        width: 80.5,
+        height: 92,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0x66F2F2F7),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Center(
+            child: SizedBox(
+              width: 66,
+              height: 66,
               child: Center(child: avatar),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -475,6 +647,206 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   bool _canAccess(models.Category category, PurchaseProvider purchaseProvider) {
     return !_isLocked(category, purchaseProvider);
+  }
+
+  String _warningFallbackPath() {
+    return '$_repoImgBaseUrl/${Uri.encodeComponent('⚠️ Warning.png')}';
+  }
+
+  String? _warningImagePath() {
+    return _firstExistingPath([
+      _warningPrimaryPath,
+      _warningFallbackPath(),
+    ]);
+  }
+
+  Future<bool> _showParentalQuestionDialog(ParentalTest test) async {
+    var isCorrect = false;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Parent control',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro Rounded',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Solve a mathematical example',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro Rounded',
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  '${test.left} ${test.operator} ${test.right} =__',
+                  style: const TextStyle(
+                    fontFamily: 'SF Pro Rounded',
+                    fontSize: 48,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF007AFF),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...test.answers.map(
+                  (answer) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(22),
+                      onTap: () {
+                        isCorrect = answer == test.correctAnswer;
+                        Navigator.of(dialogContext).pop();
+                      },
+                      child: Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2F2F7),
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '$answer',
+                          style: const TextStyle(
+                            fontFamily: 'SF Pro Rounded',
+                            fontSize: 36,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return isCorrect;
+  }
+
+  Future<void> _showTryAgainDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        Future.delayed(const Duration(milliseconds: 1100), () {
+          if (dialogContext.mounted) {
+            Navigator.of(dialogContext).pop();
+          }
+        });
+        final warningPath = _warningImagePath();
+        Widget warningWidget = const Text('⚠️', style: TextStyle(fontSize: 96));
+        if (warningPath != null) {
+          if (warningPath.startsWith('http://') || warningPath.startsWith('https://')) {
+            warningWidget = CachedNetworkImage(
+              imageUrl: warningPath,
+              width: 96,
+              height: 96,
+              fit: BoxFit.contain,
+              placeholder: (context, url) => const SizedBox.shrink(),
+              errorWidget: (context, url, error) => const Text('⚠️', style: TextStyle(fontSize: 96)),
+            );
+          } else {
+            warningWidget = Image.file(
+              File(warningPath),
+              width: 96,
+              height: 96,
+              fit: BoxFit.contain,
+            );
+          }
+        }
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                warningWidget,
+                const SizedBox(height: 8),
+                const Text(
+                  'Parent control',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro Rounded',
+                    fontSize: 38,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Solve a mathematical example',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro Rounded',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Oops! Try again!',
+                  style: TextStyle(
+                    fontFamily: 'SF Pro Rounded',
+                    fontSize: 54,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFFF5CB8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openProfileWithParentalControl() async {
+    final List<ParentalTest> tests;
+    try {
+      tests = await _firebaseService.getParentalTests();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.t(context, 'profile.parentalLoadError'))),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    if (tests.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.t(context, 'profile.parentalNoTests'))),
+      );
+      return;
+    }
+
+    while (mounted) {
+      final test = tests[_random.nextInt(tests.length)];
+      final isCorrect = await _showParentalQuestionDialog(test);
+      if (!mounted) return;
+      if (isCorrect) {
+        context.go('/profile');
+        return;
+      }
+      await _showTryAgainDialog();
+      if (!mounted) return;
+    }
   }
 
   String _pickFirstAccessibleCategoryId(
@@ -680,9 +1052,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 4,
-                              mainAxisExtent: 75,
-                              crossAxisSpacing: 15,
-                              mainAxisSpacing: 20,
+                              mainAxisExtent: 92,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 16,
                             ),
                             itemCount: animalsSorted.length,
                             itemBuilder: (context, index) {
@@ -734,9 +1106,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               final category = categories[index];
                               final isSelected = category.id == selectedCategory.id;
                               final isLocked = _isLocked(category, purchaseProvider);
-                              final bgColor = isSelected
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.30);
+                              const bgColor = Colors.white30;
 
                               return GestureDetector(
                                 onTap: () => _onCategoryTap(category, purchaseProvider),

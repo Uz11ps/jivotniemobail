@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class LocaleHelper {
   static String getCurrentLocale(BuildContext context) {
     final locale = Localizations.localeOf(context);
-    if (locale.languageCode == 'en') return 'en';
-    return 'ru';
+    if (locale.languageCode == 'ru') return 'ru';
+    return 'en';
   }
 
   static String getLocalizedString(

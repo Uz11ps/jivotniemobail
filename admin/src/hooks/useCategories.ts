@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Category } from '@/types';
+import { defaultCategories, mergeCategoriesWithDefaults } from '@/lib/catalogDefaults';
 
 async function tryServerWrite(path: string, init: RequestInit) {
   const res = await fetch(path, init);
@@ -24,9 +25,9 @@ export function useCategories() {
 
   useEffect(() => {
     if (!db) {
-      setCategories([]);
+      setCategories(defaultCategories);
       setLoading(false);
-      setError('Firebase/Firestore не инициализирован (нет db)');
+      setError('Firestore недоступен, показан встроенный каталог.');
       return;
     }
     const firestore = db;
@@ -35,14 +36,15 @@ export function useCategories() {
       q,
       (snapshot) => {
         const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Category[];
-        setCategories(data);
+        setCategories(mergeCategoriesWithDefaults(data));
         setLoading(false);
         setError(null);
       },
       (error) => {
         console.error('Ошибка загрузки категорий:', error);
+        setCategories(defaultCategories);
         setLoading(false);
-        setError(String(error?.message || error));
+        setError(`Не удалось загрузить Firestore. Показан встроенный каталог. ${String(error?.message || error)}`);
       }
     );
     return () => unsub();

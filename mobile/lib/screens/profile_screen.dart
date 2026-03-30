@@ -113,46 +113,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _categoryIconByTitle(String title) {
     final lower = title.toLowerCase();
-    if (lower.contains('питом') || lower.contains('домаш')) {
-      return _avatarOrEmoji(
-        candidatePaths: [
-          '$_imgBasePath\\🐱 Cat Face Frontal.png',
-          '$_cursorAssetsBasePath\\c__Users_1_Desktop_cursor_detiiosjivotnie_img____Cat_Face_Frontal.png',
-        ],
-        emojiFallback: '🐱',
+    String? iconPath;
+    if (lower.contains('питом') || lower.contains('pets')) {
+      iconPath = _existingPath([
+        '$_imgBasePath\\Categories icons.png',
+        '$_cursorAssetsBasePath\\c__Users_1_Desktop_cursor_detiiosjivotnie_img_Categories_icons.png',
+      ]);
+    } else if (lower.contains('ферм') || lower.contains('farm')) {
+      iconPath = _existingPath([
+        '$_imgBasePath\\Group1.png',
+        '$_cursorAssetsBasePath\\c__Users_1_Desktop_cursor_detiiosjivotnie_img_Group1.png',
+      ]);
+    } else if (lower.contains('лес') || lower.contains('forest')) {
+      iconPath = _existingPath([
+        '$_imgBasePath\\Icons2.png',
+        '$_cursorAssetsBasePath\\c__Users_1_Desktop_cursor_detiiosjivotnie_img_Icons2.png',
+      ]);
+    } else if (lower.contains('саван') || lower.contains('savan')) {
+      iconPath = _existingPath([
+        '$_imgBasePath\\Savannah\\Categories icons.png',
+        '$_imgBasePath\\savannah4.png',
+        '$_cursorAssetsBasePath\\c__Users_1_Desktop_cursor_detiiosjivotnie_img_savannah4.png',
+      ]);
+    } else if (lower.contains('пруд') || lower.contains('pond') || lower.contains('poud')) {
+      iconPath = _existingPath([
+        '$_imgBasePath\\Pond\\Tab bar category image.png',
+        '$_cursorAssetsBasePath\\c__Users_1_Desktop_cursor_detiiosjivotnie_img_Pond_Tab_bar_category_image.png',
+        '$_imgBasePath\\Property 1=Poud, Size=XL.png',
+      ]);
+    }
+    if (iconPath != null) {
+      return Image.file(
+        File(iconPath),
+        width: 36,
+        height: 36,
+        fit: BoxFit.contain,
       );
     }
-    if (lower.contains('лес')) {
-      return _avatarOrEmoji(
-        candidatePaths: [
-          '$_imgBasePath\\🐻 Bear Frontal.png',
-          '$_cursorAssetsBasePath\\c__Users_1_Desktop_cursor_detiiosjivotnie_img____Bear_Frontal.png',
-        ],
-        emojiFallback: '🐻',
-      );
-    }
-    if (lower.contains('мор') || lower.contains('рыб')) {
-      return _avatarOrEmoji(
-        candidatePaths: ['$_imgBasePath\\Frame 53.png'],
-        emojiFallback: '🐠',
-      );
-    }
-    if (lower.contains('ферм')) {
-      return _avatarOrEmoji(
-        candidatePaths: ['$_imgBasePath\\image 1123.png'],
-        emojiFallback: '🐷',
-      );
-    }
-    if (lower.contains('насеком')) {
-      return _avatarOrEmoji(
-        candidatePaths: ['$_imgBasePath\\Frame 43.png'],
-        emojiFallback: '🐞',
-      );
-    }
-    return _avatarOrEmoji(
-      candidatePaths: [],
-      emojiFallback: '🐾',
-    );
+    return const Text('🐾', style: TextStyle(fontSize: 30));
   }
 
   Widget _wordIconByName(String name) {
@@ -236,12 +234,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ..sort((a, b) => (categoryAnimalCounts[b.id] ?? 0).compareTo(categoryAnimalCounts[a.id] ?? 0));
 
     final favoriteCategories = sortedCategories.take(4).map((category) {
-      final title = category.title.getLocalized(locale);
+      final String title =
+          category.title.en.isNotEmpty ? category.title.en : category.title.getLocalized(locale);
       final count = categoryAnimalCounts[category.id] ?? 0;
       final percent = totalAnimals == 0 ? 0.0 : (count / totalAnimals) * 100;
       return (
         icon: _categoryIconByTitle(title),
-        label: '',
+        label: title,
         value: _formatPercent(percent),
       );
     }).toList();
@@ -475,6 +474,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _favoritesRow({
     required List<({Widget icon, String label, String value})> items,
     required bool hasData,
+    VoidCallback? onItemTap,
   }) {
     if (!hasData) {
       return Padding(
@@ -499,35 +499,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
         scrollDirection: Axis.horizontal,
         itemBuilder: (context, index) {
           final item = items[index];
-          return SizedBox(
-            width: 90,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                item.icon,
-                const SizedBox(height: 4),
-                if (item.label.isNotEmpty)
+          return InkWell(
+            onTap: onItemTap,
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 90,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  item.icon,
+                  const SizedBox(height: 4),
+                  if (item.label.isNotEmpty)
+                    Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'SF Pro Rounded',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  const SizedBox(height: 2),
                   Text(
-                    item.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    item.value,
                     style: const TextStyle(
                       fontFamily: 'SF Pro Rounded',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 26,
+                      color: Color(0xFF1273EA),
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                const SizedBox(height: 2),
-                Text(
-                  item.value,
-                  style: const TextStyle(
-                    fontFamily: 'SF Pro Rounded',
-                    fontSize: 26,
-                    color: Color(0xFF1273EA),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -557,31 +561,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
                 child: Row(
                   children: [
-                    const Icon(Icons.chevron_left, color: Color(0xFF1273EA), size: 26),
-                    Text(
-                      AppStrings.t(context, 'common.back'),
-                      style: const TextStyle(
-                        fontFamily: 'SF Pro Rounded',
-                        color: Color(0xFF1273EA),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
                       ),
+                      child: const Icon(Icons.chevron_left, color: Color(0xFF1273EA), size: 24),
                     ),
                   ],
                 ),
               ),
               const Spacer(),
-              Text(
-                AppStrings.t(context, 'profile.title'),
-                style: const TextStyle(
+              const Text(
+                'Parent Cabinet',
+                style: TextStyle(
                   fontFamily: 'SF Pro Rounded',
-                  fontSize: 42,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
                   color: Color(0xFF1D1D1F),
                 ),
               ),
               const Spacer(),
-              const SizedBox(width: 52),
+              const SizedBox(width: 40),
             ],
           ),
           const SizedBox(height: 12),
@@ -642,10 +645,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppStrings.t(context, 'profile.favoriteCategories'),
+                  'Favorite categories',
                   style: const TextStyle(
                     fontFamily: 'SF Pro Rounded',
-                    fontSize: 18,
+                    fontSize: 28,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -653,6 +656,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _favoritesRow(
                   hasData: _hasStats,
                   items: _favoriteCategories,
+                  onItemTap: () => context.push('/favorites'),
                 ),
               ],
             ),
@@ -668,10 +672,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppStrings.t(context, 'profile.favoriteWords'),
+                  'Top 10 favorite animals',
                   style: const TextStyle(
                     fontFamily: 'SF Pro Rounded',
-                    fontSize: 18,
+                    fontSize: 28,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -685,10 +689,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            AppStrings.t(context, 'profile.settings'),
+            'Settings',
             style: const TextStyle(
               fontFamily: 'SF Pro Rounded',
-              fontSize: 33,
+              fontSize: 38,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -751,10 +755,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            AppStrings.t(context, 'profile.extra'),
+            'Additional',
             style: const TextStyle(
               fontFamily: 'SF Pro Rounded',
-              fontSize: 33,
+              fontSize: 38,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -800,38 +804,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          const Center(
-            child: Text(
-              'Приложение v1.1.0',
-              style: TextStyle(
-                fontFamily: 'SF Pro Rounded',
-                fontSize: 14,
-                color: Color(0xFF9A9A9F),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           Center(
-            child: TextButton(
-              onPressed: () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('onboarding_completed', false);
-                if (context.mounted) {
-                  context.go('/onboarding');
-                }
+            child: InkWell(
+              borderRadius: BorderRadius.circular(28),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Telegram: скоро добавим ссылку')),
+                );
               },
-              child: Text(
-                AppStrings.t(context, 'profile.resetOnboarding'),
-                style: const TextStyle(
-                  fontFamily: 'SF Pro Rounded',
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600,
+              child: Container(
+                height: 56,
+                width: 280,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDEDF0),
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF007AFF), size: 22),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'Write to us in Telegram',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro Rounded',
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF007AFF),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          const Center(
+            child: Text(
+              'Application version 1.0.0',
+              style: TextStyle(
+                fontFamily: 'SF Pro Rounded',
+                fontSize: 16,
+                color: Color(0xFF8E8E93),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Center(
+            child: TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Terms: скоро добавим ссылку')),
+                );
+              },
+              child: const Text(
+                'Terms of Use and Privacy Policy',
+                style: TextStyle(
+                  fontFamily: 'SF Pro Rounded',
+                  fontSize: 14,
+                  color: Color(0xFF007AFF),
+                  decoration: TextDecoration.underline,
+                  decorationColor: Color(0xFF007AFF),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
         ],
       ),
     );

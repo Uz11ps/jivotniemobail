@@ -94,20 +94,21 @@ class _SettingsOrderScreenState extends State<SettingsOrderScreen> {
   Widget _iconForTitle(String title) {
     final lower = title.toLowerCase();
     String? path;
-    if (lower.contains('домаш') || lower.contains('питом') || lower.contains('pet')) {
-      path = _firstExistingPath(['$_imgBasePath\\🐱 Cat Face Frontal.png', '$_imgBasePath\\Frame 50.png']);
+    if (lower.contains('питом') || lower.contains('pets')) {
+      path = _firstExistingPath(['$_imgBasePath\\Categories icons.png']);
+    } else if (lower.contains('ферм') || lower.contains('farm')) {
+      path = _firstExistingPath(['$_imgBasePath\\Group1.png', '$_imgBasePath\\Property 1=Farm, Size=XL.png']);
     } else if (lower.contains('лес') || lower.contains('forest')) {
-      path = _firstExistingPath(['$_imgBasePath\\🐻 Bear Frontal.png']);
-    } else if (lower.contains('мор') || lower.contains('рыб') || lower.contains('sea')) {
-      path = _firstExistingPath(['$_imgBasePath\\Frame 53.png']);
-    } else if (lower.contains('насеком') || lower.contains('insect')) {
-      path = _firstExistingPath(['$_imgBasePath\\Frame 43.png']);
-    } else if (lower.contains('транспорт') || lower.contains('transport')) {
-      path = _firstExistingPath(['$_imgBasePath\\Icon.png']);
-    } else if (lower.contains('фрукт') || lower.contains('fruit')) {
-      path = _firstExistingPath(['$_imgBasePath\\image 1094.png']);
-    } else if (lower.contains('овощ') || lower.contains('vegetable')) {
-      path = _firstExistingPath(['$_imgBasePath\\image 1123.png']);
+      path = _firstExistingPath(['$_imgBasePath\\Icons2.png']);
+    } else if (lower.contains('саван') || lower.contains('savannah')) {
+      path = _firstExistingPath(['$_imgBasePath\\Savannah\\Categories icons.png', '$_imgBasePath\\savannah4.png']);
+    } else if (lower.contains('пруд') || lower.contains('pond') || lower.contains('poud')) {
+      path = _firstExistingPath([
+        '$_imgBasePath\\Pond\\Tab bar category image.png',
+        '$_imgBasePath\\Property 1=Poud, Size=XL.png',
+      ]);
+    } else if (lower.contains('джунг') || lower.contains('jungle')) {
+      path = _firstExistingPath(['$_imgBasePath\\Property 1=Jungle, Size=XL.png']);
     }
     if (path != null) {
       return ClipOval(
@@ -146,27 +147,22 @@ class _SettingsOrderScreenState extends State<SettingsOrderScreen> {
                         context.go('/profile');
                       }
                     },
-                    child: Row(
-                      children: [
-                        const Icon(Icons.chevron_left, color: Color(0xFF1273EA), size: 26),
-                        Text(
-                          AppStrings.t(context, 'common.back'),
-                          style: const TextStyle(
-                            fontFamily: 'SF Pro Rounded',
-                            color: Color(0xFF1273EA),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.chevron_left, color: Colors.black, size: 24),
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    AppStrings.t(context, 'order.title'),
-                    style: const TextStyle(
+                  const Text(
+                    'Sections sequence',
+                    style: TextStyle(
                       fontFamily: 'SF Pro Rounded',
-                      fontSize: 42,
+                      fontSize: 28,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -174,7 +170,46 @@ class _SettingsOrderScreenState extends State<SettingsOrderScreen> {
                   const SizedBox(width: 52),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 4),
+              Text(
+                locale == 'ru' ? 'Измените порядок категорий' : 'Change the order of categories',
+                style: const TextStyle(
+                  fontFamily: 'SF Pro Rounded',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 86,
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4893DE),
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _localCategories.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemBuilder: (context, index) {
+                    final title = _displayTitle(_localCategories[index], locale);
+                    return Center(
+                      child: Container(
+                        width: 62,
+                        height: 62,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
+                        alignment: Alignment.center,
+                        child: _iconForTitle(title),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
               Expanded(
                 child: ReorderableListView.builder(
                   buildDefaultDragHandles: false,
@@ -216,9 +251,9 @@ class _SettingsOrderScreenState extends State<SettingsOrderScreen> {
                             ReorderableDragStartListener(
                               index: index,
                               child: const Icon(
-                                Icons.swap_vert_rounded,
+                                Icons.drag_handle_rounded,
                                 size: 24,
-                                color: Color(0xFF1273EA),
+                                color: Color(0xFFC3C4CA),
                               ),
                             )
                           else

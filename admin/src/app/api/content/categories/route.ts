@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic';
 
 const TTL_MS = 60 * 1000;
 let cache: { ts: number; data: Array<Record<string, unknown>> } | null = null;
+const PETS_HERO_IMAGE_URL =
+  'http://168.222.193.86/uploads/categories/hero/pets_hero_static.png';
 const FALLBACK_CATEGORIES: Array<Record<string, unknown>> = [
   {
     id: 'pets',
@@ -16,8 +18,8 @@ const FALLBACK_CATEGORIES: Array<Record<string, unknown>> = [
     priceRub: null,
     title: { ru: 'Питомцы', en: 'Pets' },
     tabIconAssetPath: '',
-    heroImageAssetPath: 'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img/%D0%93%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F%20%D0%BF%D0%B8%D0%BA%D1%87%D0%B0.png',
-    heroVideoAssetPath: 'http://168.222.193.86/uploads/onboarding/seed_slide2.mp4',
+    heroImageAssetPath: PETS_HERO_IMAGE_URL,
+    heroVideoAssetPath: '',
     backgroundColorHex: '#66AEF8',
   },
   {
@@ -44,11 +46,37 @@ const FALLBACK_CATEGORIES: Array<Record<string, unknown>> = [
     tabIconAssetPath: '',
     heroImageAssetPath: '',
     heroVideoAssetPath: '',
-    backgroundColorHex: '#66AEF8',
+    backgroundColorHex: '#4C8C2B',
+  },
+  {
+    id: 'savannah',
+    order: 3,
+    isVisible: true,
+    isPaid: true,
+    iapProductId: 'com.detiiosjivotnie.savannah',
+    priceRub: 199,
+    title: { ru: 'Саванна', en: 'Savannah' },
+    tabIconAssetPath: '',
+    heroImageAssetPath: '',
+    heroVideoAssetPath: '',
+    backgroundColorHex: '#F7D15E',
+  },
+  {
+    id: 'pond',
+    order: 4,
+    isVisible: true,
+    isPaid: true,
+    iapProductId: 'com.detiiosjivotnie.pond',
+    priceRub: 199,
+    title: { ru: 'Пруд', en: 'Pond' },
+    tabIconAssetPath: '',
+    heroImageAssetPath: '',
+    heroVideoAssetPath: '',
+    backgroundColorHex: '#86D6D9',
   },
   {
     id: 'jungle',
-    order: 3,
+    order: 5,
     isVisible: true,
     isPaid: true,
     iapProductId: 'com.detiiosjivotnie.jungle',
@@ -57,7 +85,7 @@ const FALLBACK_CATEGORIES: Array<Record<string, unknown>> = [
     tabIconAssetPath: '',
     heroImageAssetPath: '',
     heroVideoAssetPath: '',
-    backgroundColorHex: '#66AEF8',
+    backgroundColorHex: '#7FC64F',
   },
 ];
 
@@ -75,9 +103,21 @@ export async function GET() {
       .orderBy('order')
       .get();
 
-    const categories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    cache = { ts: now, data: categories };
-    return NextResponse.json({ ok: true, categories });
+    const categories = snap.docs.map((d) => {
+      const row = { id: d.id, ...d.data() } as Record<string, unknown>;
+      if (d.id === 'pets') {
+        row.heroImageAssetPath = PETS_HERO_IMAGE_URL;
+        row.heroVideoAssetPath = '';
+      }
+      return row;
+    });
+    const present = new Set(categories.map((item) => String(item.id ?? '')));
+    const merged = [
+      ...categories,
+      ...FALLBACK_CATEGORIES.filter((item) => !present.has(String(item.id ?? ''))),
+    ].sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0));
+    cache = { ts: now, data: merged };
+    return NextResponse.json({ ok: true, categories: merged });
   } catch {
     if (cache) {
       return NextResponse.json({ ok: true, categories: cache.data, cached: true, stale: true });

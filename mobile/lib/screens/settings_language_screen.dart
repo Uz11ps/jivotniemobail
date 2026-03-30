@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/locale_provider.dart';
-import '../utils/app_strings.dart';
 
 class SettingsLanguageScreen extends StatefulWidget {
   const SettingsLanguageScreen({super.key});
@@ -13,17 +12,22 @@ class SettingsLanguageScreen extends StatefulWidget {
 
 class _SettingsLanguageScreenState extends State<SettingsLanguageScreen> {
   late String _selected;
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_initialized) return;
     _selected = context.read<LocaleProvider>().languageCode;
+    _initialized = true;
   }
 
   @override
   Widget build(BuildContext context) {
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final title = localeCode == 'ru' ? 'Язык' : 'Language';
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F3F5),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -39,75 +43,67 @@ class _SettingsLanguageScreenState extends State<SettingsLanguageScreen> {
                         context.go('/profile');
                       }
                     },
-                    child: Row(
-                      children: [
-                        const Icon(Icons.chevron_left, color: Color(0xFF1273EA), size: 26),
-                        Text(
-                          AppStrings.t(context, 'common.back'),
-                          style: const TextStyle(
-                            fontFamily: 'SF Pro Rounded',
-                            color: Color(0xFF1273EA),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF8F8FA),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.chevron_left, color: Colors.black, size: 24),
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    AppStrings.t(context, 'language.title'),
+                  Text(title,
                     style: const TextStyle(
                       fontFamily: 'SF Pro Rounded',
-                      fontSize: 39,
+                      fontSize: 24,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const Spacer(),
-                  const SizedBox(width: 52),
+                  const SizedBox(width: 40),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 22),
               _LanguageTile(
-                flag: '🇷🇺',
-                title: AppStrings.t(context, 'language.russian'),
-                selected: _selected == 'ru',
-                onTap: () => setState(() => _selected = 'ru'),
+                flag: '🇺🇸',
+                title: 'English',
+                selected: _selected == 'en',
+                onTap: () async {
+                  setState(() => _selected = 'en');
+                  await context.read<LocaleProvider>().setLanguageCode('en');
+                },
               ),
               const SizedBox(height: 10),
               _LanguageTile(
-                flag: '🇺🇸',
-                title: AppStrings.t(context, 'language.english'),
-                selected: _selected == 'en',
-                onTap: () => setState(() => _selected = 'en'),
+                flag: '🇷🇺',
+                title: 'Русский',
+                selected: _selected == 'ru',
+                onTap: () async {
+                  setState(() => _selected = 'ru');
+                  await context.read<LocaleProvider>().setLanguageCode('ru');
+                },
               ),
-              const SizedBox(height: 26),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final localeProvider = context.read<LocaleProvider>();
-                    await localeProvider.setLanguageCode(_selected);
-                    if (!context.mounted) return;
-                    context.pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1479EE),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    AppStrings.t(context, 'common.save'),
-                    style: const TextStyle(
-                      fontFamily: 'SF Pro Rounded',
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 25,
-                    ),
-                  ),
-                ),
+              const SizedBox(height: 10),
+              _LanguageTile(
+                flag: '🇪🇸',
+                title: 'Español',
+                selected: _selected == 'es',
+                onTap: () async {
+                  setState(() => _selected = 'es');
+                  await context.read<LocaleProvider>().setLanguageCode('es');
+                },
+              ),
+              const SizedBox(height: 10),
+              _LanguageTile(
+                flag: '🇮🇳',
+                title: 'भारतीय',
+                selected: _selected == 'hi',
+                onTap: () async {
+                  setState(() => _selected = 'hi');
+                  await context.read<LocaleProvider>().setLanguageCode('hi');
+                },
               ),
             ],
           ),
@@ -139,7 +135,7 @@ class _LanguageTile extends StatelessWidget {
         height: 56,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFFF8F8FA),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(

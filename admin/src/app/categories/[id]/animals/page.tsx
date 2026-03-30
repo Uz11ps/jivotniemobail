@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { StorageFileUpload } from '@/components/StorageFileUpload';
 import { getFileUrlFromPathOrUrl } from '@/lib/storage';
+import { AdminShell } from '@/components/AdminShell';
 
 const animalSchema = z.object({
   order: z.number(),
@@ -90,22 +91,23 @@ function AnimalsContent() {
   // Если кто-то открыл шаблонный URL /categories/[id]/animals, показываем понятную ошибку.
   if (invalidCategoryId) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h1 className="text-xl font-bold mb-2">Категория не выбрана</h1>
-            <p className="text-gray-700 mb-4">
-              Открой животных через страницу категорий (кнопка &quot;Животные&quot; у нужной категории).
-            </p>
-            <button
-              onClick={() => router.push('/categories')}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Перейти к категориям
-            </button>
-          </div>
+      <AdminShell
+        title="Животные"
+        subtitle="Категория не выбрана. Открой животных через экран категорий."
+      >
+        <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-2xl font-black tracking-tight text-slate-900">Категория не выбрана</h2>
+          <p className="mt-2 text-sm text-slate-500">
+            Открой животных через страницу категорий по кнопке &quot;Животные&quot; у нужной категории.
+          </p>
+          <button
+            onClick={() => router.push('/categories')}
+            className="mt-5 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700"
+          >
+            Перейти к категориям
+          </button>
         </div>
-      </div>
+      </AdminShell>
     );
   }
 
@@ -114,41 +116,58 @@ function AnimalsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminShell
+      title="Животные категории"
+      subtitle={`Управление карточками, видео, аудио и порядком показа для категории ${categoryId}.`}
+      action={
+        <button
+          onClick={() => {
+            setShowForm(true);
+            setEditingId(null);
+            reset({
+              order: animals.length,
+              isVisible: true,
+              name: { ru: '', en: '' },
+              topText: { ru: '', en: '' },
+              previewAssetPath: '',
+              bgVideoAssetPath: '',
+              soundAssetPath: '',
+            });
+          }}
+          className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700"
+        >
+          Добавить животное
+        </button>
+      }
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          { label: 'Всего животных', value: String(animals.length) },
+          { label: 'Видимых', value: String(animals.filter((animal) => animal.isVisible).length) },
+          { label: 'С медиа', value: String(animals.filter((animal) => animal.previewAssetPath || animal.bgVideoAssetPath || animal.soundAssetPath).length) },
+        ].map((item) => (
+          <div key={item.label} className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5">
+            <div className="text-sm font-semibold text-slate-500">{item.label}</div>
+            <div className="mt-3 text-3xl font-black tracking-tight text-slate-900">{item.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8">
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-900">
+          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
             Ошибка загрузки животных: {error}
           </div>
         )}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <button onClick={() => router.push('/categories')} className="text-blue-600 mb-2">
-              ← Назад к категориям
-            </button>
-            <h1 className="text-2xl font-bold">Животные в категории</h1>
-          </div>
-          <button
-            onClick={() => {
-              setShowForm(true);
-              setEditingId(null);
-              reset({
-                order: animals.length,
-                isVisible: true,
-                name: { ru: '', en: '' },
-                topText: { ru: '', en: '' },
-                previewAssetPath: '',
-                bgVideoAssetPath: '',
-                soundAssetPath: '',
-              });
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Добавить животное
-          </button>
-        </div>
 
-        {(showForm || editingId) && (
+        <button
+          onClick={() => router.push('/categories')}
+          className="mb-5 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+        >
+          ← Назад к категориям
+        </button>
+
+        {(showForm || editingId) ? (
           <form
             onSubmit={handleSubmit(onSubmit)}
             onKeyDown={(e) => {
@@ -156,26 +175,26 @@ function AnimalsContent() {
                 e.preventDefault();
               }
             }}
-            className="bg-white p-6 rounded-lg shadow mb-6"
+            className="mb-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm"
           >
-            <h2 className="text-lg font-semibold mb-4">
+            <h2 className="mb-5 text-2xl font-black tracking-tight text-slate-900">
               {editingId ? 'Редактировать животное' : 'Новое животное'}
             </h2>
             
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium mb-1">Название (RU)</label>
-                <input {...register('name.ru')} className="w-full border rounded px-3 py-2" />
+                <label className="mb-1 block text-sm font-semibold text-slate-700">Название (RU)</label>
+                <input {...register('name.ru')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" />
                 {errors.name?.ru && <p className="text-red-500 text-sm">{errors.name.ru.message}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Название (EN)</label>
-                <input {...register('name.en')} className="w-full border rounded px-3 py-2" />
+                <label className="mb-1 block text-sm font-semibold text-slate-700">Название (EN)</label>
+                <input {...register('name.en')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" />
                 {errors.name?.en && <p className="text-red-500 text-sm">{errors.name.en.message}</p>}
               </div>
             </div>
 
-            <div className="mb-4">
+            <div className="mt-5">
               <StorageFileUpload
                 path={`animals/icons/${Date.now()}.png`}
                 value={watch('previewAssetPath')}
@@ -183,31 +202,24 @@ function AnimalsContent() {
                 accept="image/*"
                 label="Иконка животного (для сетки)"
               />
-              {watch('previewAssetPath') && (
-                <img
-                  src={getFileUrlFromPathOrUrl(watch('previewAssetPath'))}
-                  alt="Icon"
-                  className="w-16 h-16 mt-2 rounded"
-                />
-              )}
             </div>
 
-            <div className="mb-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="mt-5">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Текст сверху (RU)</label>
-                  <input {...register('topText.ru')} className="w-full border rounded px-3 py-2" placeholder="Кот/кошка" />
+                  <label className="mb-1 block text-sm font-semibold text-slate-700">Текст сверху (RU)</label>
+                  <input {...register('topText.ru')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" placeholder="Кот/кошка" />
                   {errors.topText?.ru && <p className="text-red-500 text-sm">{errors.topText.ru.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Текст сверху (EN)</label>
-                  <input {...register('topText.en')} className="w-full border rounded px-3 py-2" placeholder="Cat" />
+                  <label className="mb-1 block text-sm font-semibold text-slate-700">Текст сверху (EN)</label>
+                  <input {...register('topText.en')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" placeholder="Cat" />
                   {errors.topText?.en && <p className="text-red-500 text-sm">{errors.topText.en.message}</p>}
                 </div>
               </div>
             </div>
 
-            <div className="mb-4">
+            <div className="mt-5 grid gap-5 xl:grid-cols-2">
               <StorageFileUpload
                 path={`animals/backgroundVideo/${Date.now()}.mp4`}
                 value={watch('bgVideoAssetPath')}
@@ -215,9 +227,6 @@ function AnimalsContent() {
                 accept="video/mp4,video/*"
                 label="Фон-видео (mp4)"
               />
-            </div>
-
-            <div className="mb-4">
               <StorageFileUpload
                 path={`animals/backgrounds/${Date.now()}.png`}
                 value={watch('bgAssetPath')}
@@ -227,7 +236,7 @@ function AnimalsContent() {
               />
             </div>
 
-            <div className="mb-4">
+            <div className="mt-5">
               <StorageFileUpload
                 path={`animals/audio/${Date.now()}.mp3`}
                 value={watch('soundAssetPath')}
@@ -235,16 +244,9 @@ function AnimalsContent() {
                 accept="audio/*"
                 label="Аудио животного"
               />
-              {watch('soundAssetPath') && (
-                <audio
-                  src={getFileUrlFromPathOrUrl(watch('soundAssetPath')!)}
-                  controls
-                  className="mt-2 w-full"
-                />
-              )}
             </div>
 
-            <div className="mb-4">
+            <div className="mt-5 grid gap-5 xl:grid-cols-2">
               <StorageFileUpload
                 path={`animals/voices/${Date.now()}-ru.mp3`}
                 value={watch('voiceAssetPath')?.ru}
@@ -252,9 +254,6 @@ function AnimalsContent() {
                 accept="audio/*"
                 label="Голос (RU) - опционально"
               />
-            </div>
-
-            <div className="mb-4">
               <StorageFileUpload
                 path={`animals/voices/${Date.now()}-en.mp3`}
                 value={watch('voiceAssetPath')?.en}
@@ -264,7 +263,7 @@ function AnimalsContent() {
               />
             </div>
 
-            <div className="mb-4">
+            <div className="mt-5 grid gap-5 xl:grid-cols-2">
               <StorageFileUpload
                 path={`animals/animations/${Date.now()}.lottie`}
                 value={watch('animationAssetPath')}
@@ -272,9 +271,6 @@ function AnimalsContent() {
                 accept=".lottie,application/json"
                 label="Анимация (Lottie) - опционально"
               />
-            </div>
-
-            <div className="mb-4">
               <StorageFileUpload
                 path={`animals/animations/${Date.now()}.mp4`}
                 value={watch('animationVideoAssetPath')}
@@ -284,15 +280,15 @@ function AnimalsContent() {
               />
             </div>
 
-            <div className="mb-4">
+            <div className="mt-5 rounded-[28px] border border-slate-200 bg-slate-50 p-5">
               <label className="flex items-center gap-2">
                 <input type="checkbox" {...register('isVisible')} />
-                <span>Видимо</span>
+                <span className="font-semibold text-slate-800">Видимо</span>
               </label>
             </div>
 
-            <div className="flex gap-2">
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <div className="mt-6 flex gap-3">
+              <button type="submit" className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700">
                 Сохранить
               </button>
               <button
@@ -302,63 +298,76 @@ function AnimalsContent() {
                   setEditingId(null);
                   reset();
                 }}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
               >
                 Отмена
               </button>
             </div>
           </form>
-        )}
+        ) : null}
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
           <SortableList
             items={animals}
             onReorder={handleReorder}
             renderItem={(animal) => (
-              <div className="flex items-center justify-between p-4 border-b">
-                <div className="flex items-center gap-4">
+              <div className="rounded-[24px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex items-center gap-4">
                   {animal.previewAssetPath && (
                     <img
                       src={getFileUrlFromPathOrUrl(animal.previewAssetPath)}
                       alt={animal.name.ru}
-                      className="w-16 h-16 rounded"
+                      className="h-16 w-16 rounded-2xl border border-slate-200 bg-white object-contain p-2"
                     />
                   )}
-                  <span className="font-semibold">{animal.name.ru}</span>
+                    <div>
+                      <div className="font-black text-slate-900">{animal.name.ru}</div>
+                      <div className="text-sm text-slate-500">{animal.name.en}</div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {animal.bgVideoAssetPath ? (
+                      <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-800">Видео</span>
+                    ) : null}
+                    {animal.soundAssetPath ? (
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">Аудио</span>
+                    ) : null}
                   {!animal.isVisible && (
-                    <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-800">
                       Скрыто
                     </span>
                   )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingId(animal.id!);
-                      setShowForm(true);
-                      reset(animal);
-                    }}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Редактировать
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm('Удалить животное?')) {
-                        deleteAnimal(animal.id!);
-                      }
-                    }}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Удалить
-                  </button>
-                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      onClick={() => {
+                        setEditingId(animal.id!);
+                        setShowForm(true);
+                        reset(animal);
+                      }}
+                      className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                    >
+                      Редактировать
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm('Удалить животное?')) {
+                          deleteAnimal(animal.id!);
+                        }
+                      }}
+                      className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+                    >
+                      Удалить
+                    </button>
+                  </div>
               </div>
             )}
           />
         </div>
       </div>
-    </div>
+    </AdminShell>
   );
 }
 

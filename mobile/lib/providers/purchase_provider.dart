@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../services/purchase_service.dart';
 import '../services/firebase_service.dart';
@@ -42,9 +43,7 @@ class PurchaseProvider with ChangeNotifier {
     try {
       final success = await _purchaseService.purchaseProduct(productId);
       if (success) {
-        _purchasedProducts.add(productId);
-        await _savePurchasedProducts();
-        notifyListeners();
+        await _grantLocalPurchase(productId);
         try {
           await _firebaseService.logEvent('purchase_success', {
             'productId': productId,
@@ -56,8 +55,17 @@ class PurchaseProvider with ChangeNotifier {
       if (kDebugMode) {
         print('Error purchasing product: $e');
       }
+      // На Windows StoreKit/Google Play недоступны: разрешаем локальный dev-fallback.
+      if (!kIsWeb && Platform.isWindows) {
+        await _grantLocalPurchase(productId);
+        return true;
+      }
       return false;
     }
+  }
+
+  Future<void> markPurchasedForDev(String productId) async {
+    await _grantLocalPurchase(productId);
   }
 
   Future<bool> restorePurchases() async {
@@ -92,5 +100,11 @@ class PurchaseProvider with ChangeNotifier {
       'purchased_products',
       _purchasedProducts.toList(),
     );
+  }
+
+  Future<void> _grantLocalPurchase(String productId) async {
+    _purchasedProducts.add(productId);
+    await _savePurchasedProducts();
+    notifyListeners();
   }
 }

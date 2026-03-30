@@ -8,54 +8,105 @@ type Ctx = { params: Promise<{ id: string }> };
 const TTL_MS = 60 * 1000;
 const animalsCache = new Map<string, { ts: number; data: Array<Record<string, unknown>> }>();
 const FALLBACK_VIDEO_BASE_URL = 'https://raw.githubusercontent.com/Uz11ps/jivotniemobail/main/img';
+const animal = (
+  id: string,
+  order: number,
+  ru: string,
+  en: string,
+  bgVideoAssetPath?: string,
+): Record<string, unknown> => ({
+  id,
+  order,
+  isVisible: true,
+  name: { ru, en },
+  topText: { ru, en },
+  ...(bgVideoAssetPath ? { bgVideoAssetPath } : {}),
+});
 const FALLBACK_ANIMALS: Record<string, Array<Record<string, unknown>>> = {
   pets: [
-    {
-      id: 'cat',
-      order: 0,
-      isVisible: true,
-      name: { ru: 'Кот', en: 'Cat' },
-      topText: { ru: 'Кот/кошка', en: 'Cat' },
-      bgVideoAssetPath: `${FALLBACK_VIDEO_BASE_URL}/Cat.mp4`,
-    },
-    { id: 'rabbit', order: 1, isVisible: true, name: { ru: 'Кролик', en: 'Rabbit' }, topText: { ru: 'Кролик', en: 'Rabbit' } },
-    { id: 'frog', order: 2, isVisible: true, name: { ru: 'Лягушка', en: 'Frog' }, topText: { ru: 'Лягушка', en: 'Frog' } },
-    {
-      id: 'guinea',
-      order: 3,
-      isVisible: true,
-      name: { ru: 'Морская свинка', en: 'Guinea Pig' },
-      topText: { ru: 'Морская свинка', en: 'Guinea pig' },
-    },
-    { id: 'turtle', order: 4, isVisible: true, name: { ru: 'Черепаха', en: 'Turtle' }, topText: { ru: 'Черепаха', en: 'Turtle' } },
-    { id: 'dog', order: 5, isVisible: true, name: { ru: 'Собака', en: 'Dog' }, topText: { ru: 'Собака', en: 'Dog' } },
-    { id: 'mouse', order: 6, isVisible: true, name: { ru: 'Мышка', en: 'Mouse' }, topText: { ru: 'Мышка', en: 'Mouse' } },
-    { id: 'hamster', order: 7, isVisible: true, name: { ru: 'Хомяк', en: 'Hamster' }, topText: { ru: 'Хомяк', en: 'Hamster' } },
-    { id: 'parrot', order: 8, isVisible: true, name: { ru: 'Попугай', en: 'Parrot' }, topText: { ru: 'Попугай', en: 'Parrot' } },
-    { id: 'ferret', order: 9, isVisible: true, name: { ru: 'Хорек', en: 'Ferret' }, topText: { ru: 'Хорек', en: 'Ferret' } },
-    { id: 'snail', order: 10, isVisible: true, name: { ru: 'Улитка', en: 'Snail' }, topText: { ru: 'Улитка', en: 'Snail' } },
-    {
-      id: 'white_mouse',
-      order: 11,
-      isVisible: true,
-      name: { ru: 'Белая мышь', en: 'White mouse' },
-      topText: { ru: 'Белая мышь', en: 'White mouse' },
-    },
+    animal('cat', 0, 'Кот', 'Cat', `${FALLBACK_VIDEO_BASE_URL}/Cat.mp4`),
+    animal('rabbit', 1, 'Кролик', 'Rabbit'),
+    animal('frog', 2, 'Лягушка', 'Frog'),
+    animal('guinea', 3, 'Морская свинка', 'Guinea Pig'),
+    animal('turtle', 4, 'Черепаха', 'Turtle'),
+    animal('dog', 5, 'Собака', 'Dog'),
+    animal('mouse', 6, 'Мышка', 'Mouse'),
+    animal('hamster', 7, 'Хомяк', 'Hamster'),
+    animal('parrot', 8, 'Попугай', 'Parrot'),
+    animal('ferret', 9, 'Хорек', 'Ferret'),
+    animal('snail', 10, 'Улитка', 'Snail'),
+    animal('white_mouse', 11, 'Белая мышь', 'White mouse'),
   ],
   farm: [
-    { id: 'cow', order: 0, isVisible: true, name: { ru: 'Корова', en: 'Cow' }, topText: { ru: 'Корова', en: 'Cow' } },
-    {
-      id: 'pig',
-      order: 1,
-      isVisible: true,
-      name: { ru: 'Свинья', en: 'Pig' },
-      topText: { ru: 'Свинья', en: 'Pig' },
-      bgVideoAssetPath: 'http://168.222.193.86/uploads/animals/backgroundVideo/seed_pig.mp4',
-    },
-    { id: 'goat', order: 2, isVisible: true, name: { ru: 'Коза', en: 'Goat' }, topText: { ru: 'Коза', en: 'Goat' } },
+    animal('horse', 0, 'Лошадь', 'Horse'),
+    animal('pig', 1, 'Свинья', 'Pig'),
+    animal('cow', 2, 'Корова', 'Cow'),
+    animal('chicken', 3, 'Курица', 'Chicken'),
+    animal('sheep', 4, 'Овца', 'Sheep'),
+    animal('goat', 5, 'Коза', 'Goat'),
+    animal('ostrich', 6, 'Страус', 'Ostrich'),
+    animal('duck', 7, 'Утка', 'Duck'),
+    animal('deer', 8, 'Олень', 'Deer'),
+    animal('bee', 9, 'Пчела', 'Bee'),
+    animal('camel', 10, 'Верблюд', 'Camel'),
+    animal('lamb', 11, 'Ягненок', 'Lamb'),
   ],
-  forest: [],
-  jungle: [],
+  forest: [
+    animal('bear', 0, 'Медведь', 'Bear'),
+    animal('wolf', 1, 'Волк', 'Wolf'),
+    animal('fox', 2, 'Лиса', 'Fox'),
+    animal('owl', 3, 'Сова', 'Owl'),
+    animal('squirrel', 4, 'Белка', 'Squirrel'),
+    animal('woodpecker', 5, 'Дятел', 'Woodpecker'),
+    animal('hedgehog', 6, 'Еж', 'Hedgehog'),
+    animal('deer', 7, 'Олень', 'Deer'),
+    animal('bird', 8, 'Птичка', 'Bird'),
+    animal('beaver', 9, 'Бобр', 'Beaver'),
+    animal('crow', 10, 'Ворон', 'Crow'),
+    animal('ant', 11, 'Муравей', 'Ant'),
+  ],
+  savannah: [
+    animal('lion', 0, 'Лев', 'Lion'),
+    animal('elephant', 1, 'Слон', 'Elephant'),
+    animal('leopard', 2, 'Леопард', 'Leopard'),
+    animal('rhino', 3, 'Носорог', 'Rhino'),
+    animal('giraffe', 4, 'Жираф', 'Giraffe'),
+    animal('zebra', 5, 'Зебра', 'Zebra'),
+    animal('warthog', 6, 'Бородавочник', 'Warthog'),
+    animal('meerkat', 7, 'Сурикат', 'Meerkat'),
+    animal('chimpanzee', 8, 'Шимпанзе', 'Chimpanzee'),
+    animal('vulture', 9, 'Гриф', 'Vulture'),
+    animal('hippo', 10, 'Бегемот', 'Hippo'),
+    animal('buffalo', 11, 'Буйвол', 'Buffalo'),
+  ],
+  pond: [
+    animal('dragonfly', 0, 'Стрекоза', 'Dragonfly'),
+    animal('crayfish', 1, 'Рак', 'Crayfish'),
+    animal('shell', 2, 'Ракушка', 'Shell'),
+    animal('newt', 3, 'Тритон', 'Newt'),
+    animal('frog', 4, 'Лягушка', 'Frog'),
+    animal('beetle', 5, 'Жук', 'Beetle'),
+    animal('ant', 6, 'Муравей', 'Ant'),
+    animal('duckling', 7, 'Утенок', 'Duckling'),
+    animal('heron', 8, 'Цапля', 'Heron'),
+    animal('fish', 9, 'Рыба', 'Fish'),
+    animal('crocodile', 10, 'Крокодил', 'Crocodile'),
+    animal('butterfly', 11, 'Бабочка', 'Butterfly'),
+  ],
+  jungle: [
+    animal('leopard', 0, 'Леопард', 'Leopard'),
+    animal('sloth', 1, 'Ленивец', 'Sloth'),
+    animal('lizard', 2, 'Ящерица', 'Lizard'),
+    animal('crocodile', 3, 'Крокодил', 'Crocodile'),
+    animal('capybara', 4, 'Капибара', 'Capybara'),
+    animal('anteater', 5, 'Муравьед', 'Anteater'),
+    animal('monkey', 6, 'Обезьяна', 'Monkey'),
+    animal('tiger', 7, 'Тигр', 'Tiger'),
+    animal('bird', 8, 'Птица', 'Bird'),
+    animal('mantis', 9, 'Богомол', 'Mantis'),
+    animal('chameleon', 10, 'Хамелеон', 'Chameleon'),
+    animal('panther', 11, 'Пантера', 'Panther'),
+  ],
 };
 
 export async function GET(_req: Request, ctx: Ctx) {
@@ -80,8 +131,9 @@ export async function GET(_req: Request, ctx: Ctx) {
       .get();
 
     const animals = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    animalsCache.set(id, { ts: now, data: animals });
-    return NextResponse.json({ ok: true, animals });
+    const result = animals.length > 0 ? animals : (FALLBACK_ANIMALS[id] ?? []);
+    animalsCache.set(id, { ts: now, data: result });
+    return NextResponse.json({ ok: true, animals: result, fallback: animals.length === 0 });
   } catch {
     if (cached) {
       return NextResponse.json({ ok: true, animals: cached.data, cached: true, stale: true });

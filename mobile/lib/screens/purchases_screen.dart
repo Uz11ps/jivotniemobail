@@ -46,6 +46,32 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
     return '🐾';
   }
 
+  String? _iconPathForTitle(String title) {
+    final lower = title.toLowerCase();
+    if (lower.contains('питом') || lower.contains('pets')) {
+      return _existingPath(['$_imgBasePath\\Categories icons.png']);
+    }
+    if (lower.contains('ферм') || lower.contains('farm')) {
+      return _existingPath(['$_imgBasePath\\Group1.png', '$_imgBasePath\\Property 1=Farm, Size=XL.png']);
+    }
+    if (lower.contains('лес') || lower.contains('forest')) {
+      return _existingPath(['$_imgBasePath\\Icons2.png']);
+    }
+    if (lower.contains('саван') || lower.contains('savannah')) {
+      return _existingPath(['$_imgBasePath\\Savannah\\Categories icons.png', '$_imgBasePath\\savannah4.png']);
+    }
+    if (lower.contains('пруд') || lower.contains('pond') || lower.contains('poud')) {
+      return _existingPath([
+        '$_imgBasePath\\Pond\\Tab bar category image.png',
+        '$_imgBasePath\\Property 1=Poud, Size=XL.png',
+      ]);
+    }
+    if (lower.contains('джунг') || lower.contains('jungle')) {
+      return _existingPath(['$_imgBasePath\\Property 1=Jungle, Size=XL.png']);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final purchaseProvider = context.watch<PurchaseProvider>();
@@ -87,19 +113,14 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                         context.go('/profile');
                       }
                     },
-                    child: Row(
-                      children: [
-                        const Icon(Icons.chevron_left, color: Color(0xFF1273EA), size: 26),
-                        Text(
-                          AppStrings.t(context, 'common.back'),
-                          style: const TextStyle(
-                            fontFamily: 'SF Pro Rounded',
-                            color: Color(0xFF1273EA),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF8F8FA),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.chevron_left, color: Colors.black, size: 24),
                     ),
                   ),
                   const Spacer(),
@@ -124,31 +145,25 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                       children: [
                         Builder(
                           builder: (context) {
-                            final path = _existingPath(['$_imgBasePath\\Frame 52.png']);
+                            final path = _existingPath([
+                              '$_imgBasePath\\тигр-подмигивает-и-улыбается 1.png',
+                              '$_imgBasePath\\тигр-подмигивает-и-улыбается 11.png',
+                            ]);
                             if (path != null) {
-                              return Image.file(File(path), width: 180, height: 180, fit: BoxFit.contain);
+                              return Image.file(File(path), width: 220, height: 220, fit: BoxFit.contain);
                             }
-                            return const Text('🎁', style: TextStyle(fontSize: 120));
+                            return const Text('🐯', style: TextStyle(fontSize: 140));
                           },
                         ),
                         const SizedBox(height: 18),
-                        Text(
-                          AppStrings.t(context, 'purchases.emptyTitle'),
-                          style: const TextStyle(
-                            fontFamily: 'SF Pro Rounded',
-                            fontSize: 42,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          AppStrings.t(context, 'purchases.emptySubtitle'),
+                        const Text(
+                          "You haven't made any purchases\nyet. Maybe we should buy some?",
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'SF Pro Rounded',
-                            fontSize: 30,
-                            color: Color(0xFF70747B),
-                            fontWeight: FontWeight.w500,
+                            fontSize: 24,
+                            color: Color(0xFF1D1D1F),
+                            fontWeight: FontWeight.w600,
                             height: 1.2,
                           ),
                         ),
@@ -156,9 +171,9 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                         SizedBox(
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: () => context.go('/categories'),
+                            onPressed: () => context.push('/purchases/offer'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFCDE3FA),
+                              backgroundColor: const Color(0xFF007AFF),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(28),
                               ),
@@ -167,10 +182,10 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 26),
                               child: Text(
-                                AppStrings.t(context, 'purchases.buyPacks'),
+                                'Go shopping!',
                                 style: const TextStyle(
                                   fontFamily: 'SF Pro Rounded',
-                                  color: Color(0xFF1273EA),
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w800,
                                   fontSize: 30,
                                 ),
@@ -186,15 +201,30 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                 Expanded(
                   child: ListView(
                     children: [
-                      ...purchasedCategories.map(
-                        (category) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _PurchaseTile(
-                            title: category.title.getLocalized(locale),
-                            emoji: _emojiForTitle(category.title.getLocalized(locale)),
+                      ...purchasedCategories.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final category = entry.value;
+                        final title = category.title.getLocalized(locale);
+                        final iconPath = _iconPathForTitle(title);
+                        final date = DateTime.now().subtract(Duration(days: index * 3));
+                        final dateText =
+                            '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)}';
+                        final timeText =
+                            '${(12 + index).toString().padLeft(2, '0')}:${(5 + index * 7).toString().padLeft(2, '0')}';
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _PurchaseHistoryTile(
+                            title: '${title} pack',
+                            iconPath: iconPath,
+                            emoji: _emojiForTitle(title),
+                            orderId: '#${331852 + index * 5}',
+                            dateText: dateText,
+                            timeText: timeText,
+                            priceText: '\$2.00',
+                            cardText: '* 3384',
                           ),
-                        ),
-                      ),
+                        );
+                      }),
                     ],
                   ),
                 ),
@@ -206,35 +236,113 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
   }
 }
 
-class _PurchaseTile extends StatelessWidget {
+class _PurchaseHistoryTile extends StatelessWidget {
   final String title;
+  final String? iconPath;
   final String emoji;
+  final String orderId;
+  final String dateText;
+  final String timeText;
+  final String priceText;
+  final String cardText;
 
-  const _PurchaseTile({required this.title, required this.emoji});
+  const _PurchaseHistoryTile({
+    required this.title,
+    required this.iconPath,
+    required this.emoji,
+    required this.orderId,
+    required this.dateText,
+    required this.timeText,
+    required this.priceText,
+    required this.cardText,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 62,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
-          const SizedBox(width: 10),
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'SF Pro Rounded',
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-            ),
+          Row(
+            children: [
+              if (iconPath != null)
+                Image.file(
+                  File(iconPath!),
+                  width: 34,
+                  height: 34,
+                  fit: BoxFit.contain,
+                )
+              else
+                Text(emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'SF Pro Rounded',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              Text(
+                orderId,
+                style: const TextStyle(
+                  fontFamily: 'SF Pro Rounded',
+                  color: Color(0xFF9A9AA2),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.copy_all_outlined, color: Color(0xFF007AFF), size: 20),
+            ],
           ),
+          const SizedBox(height: 12),
+          _kv('Date and time of purchase', dateText),
+          _divider(),
+          _kv('Time of puchare', timeText),
+          _divider(),
+          _kv('Purchase price', priceText),
+          _divider(),
+          _kv('Card number', cardText),
         ],
       ),
+    );
+  }
+
+  Widget _divider() => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 6),
+        child: Divider(height: 1),
+      );
+
+  Widget _kv(String key, String value) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            key,
+            style: const TextStyle(
+              fontFamily: 'SF Pro Rounded',
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: 'SF Pro Rounded',
+            fontSize: 15,
+            color: Color(0xFF8E8E93),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

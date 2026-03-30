@@ -1,6 +1,7 @@
 'use client';
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AdminShell } from '@/components/AdminShell';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -10,23 +11,30 @@ function CategoryDetailPage() {
   const categoryId = params.id as string;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <button onClick={() => router.push('/categories')} className="text-blue-600 mb-4">
-            ← Назад к категориям
-          </button>
-          <h1 className="text-2xl font-bold">Управление животными</h1>
-        </div>
-        
+    <AdminShell
+      title="Раздел категории"
+      subtitle="Отсюда можно перейти к полному списку животных выбранной категории."
+    >
+      <div className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6">
+        <button
+          onClick={() => router.push('/categories')}
+          className="mb-4 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+        >
+          ← Назад к категориям
+        </button>
+        <h2 className="text-2xl font-black tracking-tight text-slate-900">Управление животными</h2>
+        <p className="mt-2 text-sm text-slate-500">
+          Категория: <span className="font-semibold text-slate-800">{categoryId}</span>
+        </p>
+
         <Link
           href={`/categories/${categoryId}/animals`}
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+          className="mt-6 inline-flex rounded-2xl bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-700"
         >
           Перейти к животным →
         </Link>
       </div>
-    </div>
+    </AdminShell>
   );
 }
 

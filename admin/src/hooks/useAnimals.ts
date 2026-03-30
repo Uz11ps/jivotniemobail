@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Animal } from '@/types';
+import { getDefaultAnimals, mergeAnimalsWithDefaults } from '@/lib/catalogDefaults';
 
 async function tryServerWrite(path: string, init: RequestInit) {
   const res = await fetch(path, init);
@@ -25,9 +26,9 @@ export function useAnimals(categoryId: string) {
   useEffect(() => {
     if (!categoryId) return;
     if (!db) {
-      setAnimals([]);
+      setAnimals(getDefaultAnimals(categoryId));
       setLoading(false);
-      setError('Firebase/Firestore не инициализирован (нет db)');
+      setError('Firestore недоступен, показаны встроенные животные.');
       return;
     }
     const firestore = db;
@@ -39,14 +40,15 @@ export function useAnimals(categoryId: string) {
       q,
       (snapshot) => {
         const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Animal[];
-        setAnimals(data);
+        setAnimals(mergeAnimalsWithDefaults(categoryId, data));
         setLoading(false);
         setError(null);
       },
       (error) => {
         console.error('Ошибка загрузки животных:', error);
+        setAnimals(getDefaultAnimals(categoryId));
         setLoading(false);
-        setError(String(error?.message || error));
+        setError(`Не удалось загрузить Firestore. Показаны встроенные животные. ${String(error?.message || error)}`);
       }
     );
     return () => unsub();
@@ -55,7 +57,7 @@ export function useAnimals(categoryId: string) {
   const loadAnimals = async () => {
     if (!categoryId) return;
     if (!db) {
-      setAnimals([]);
+      setAnimals(getDefaultAnimals(categoryId));
       setLoading(false);
       return;
     }

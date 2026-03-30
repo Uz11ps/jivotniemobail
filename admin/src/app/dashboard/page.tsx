@@ -1,111 +1,86 @@
 'use client';
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import { AdminShell } from '@/components/AdminShell';
 import Link from 'next/link';
+import { BarChart3, FolderKanban, GalleryVerticalEnd, PawPrint, ShieldCheck, Ticket } from 'lucide-react';
 
 function DashboardContent() {
-  const { user, signOut } = useAuth();
+  const cards = [
+    {
+      href: '/categories',
+      title: 'Категории',
+      description: 'Создание категорий, цвета фона, hero-блоки и таб-иконки.',
+      icon: FolderKanban,
+    },
+    {
+      href: '/categories',
+      title: 'Животные',
+      description: 'Быстрый переход к спискам животных внутри каждой категории.',
+      icon: PawPrint,
+    },
+    {
+      href: '/offers',
+      title: 'Офферы',
+      description: 'Управление paywall, карточками покупки и текстами предложений.',
+      icon: Ticket,
+    },
+    {
+      href: '/analytics',
+      title: 'Аналитика',
+      description: 'Переход к графикам и событиям использования приложения.',
+      icon: BarChart3,
+    },
+    {
+      href: '/parental-tests',
+      title: 'Родительский контроль',
+      description: 'Настройка математических тестов перед входом в кабинет.',
+      icon: ShieldCheck,
+    },
+    {
+      href: '/onboarding',
+      title: 'Онбординг',
+      description: 'Редактирование стартовых экранов, видео и фоновых цветов.',
+      icon: GalleryVerticalEnd,
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold">Админ-панель</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {user?.username}
-              </span>
-              <button
-                onClick={signOut}
-                className="text-sm text-red-600 hover:text-red-700"
-              >
-                Выйти
-              </button>
-            </div>
+    <AdminShell
+      title="Панель управления"
+      subtitle="Главная точка входа для работы с категориями, животными, медиа-файлами, онбордингом и промо-блоками."
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          { label: 'Основной каталог', value: '6 разделов', hint: 'категории, hero и навбар' },
+          { label: 'Контент животных', value: '60+ карточек', hint: 'иконки, видео и аудио' },
+          { label: 'Управление приложением', value: '3 зоны', hint: 'онбординг, офферы, тесты' },
+        ].map((item) => (
+          <div key={item.label} className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5">
+            <div className="text-sm font-semibold text-slate-500">{item.label}</div>
+            <div className="mt-3 text-3xl font-black tracking-tight text-slate-900">{item.value}</div>
+            <div className="mt-2 text-sm text-slate-500">{item.hint}</div>
           </div>
-        </div>
-      </nav>
+        ))}
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {cards.map(({ href, title, description, icon: Icon }) => (
           <Link
-            href="/categories"
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
+            key={href + title}
+            href={href}
+            className="group rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg"
           >
-            <h2 className="text-lg font-semibold mb-2">Категории</h2>
-            <p className="text-gray-600 text-sm">
-              Управление категориями животных
-            </p>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white transition group-hover:bg-slate-700">
+              <Icon className="h-5 w-5" />
+            </div>
+            <h2 className="mt-5 text-xl font-black tracking-tight text-slate-900">{title}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
+            <div className="mt-5 text-sm font-semibold text-slate-900">Открыть раздел</div>
           </Link>
-
-          <Link
-            href="/categories"
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            <h2 className="text-lg font-semibold mb-2">Животные</h2>
-            <p className="text-gray-600 text-sm">
-              Выберите категорию и откройте животных
-            </p>
-          </Link>
-
-          <Link
-            href="/offers"
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            <h2 className="text-lg font-semibold mb-2">Офферы</h2>
-            <p className="text-gray-600 text-sm">
-              Управление специальными предложениями
-            </p>
-          </Link>
-
-          <Link
-            href="/analytics"
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            <h2 className="text-lg font-semibold mb-2">Аналитика</h2>
-            <p className="text-gray-600 text-sm">
-              Графики и статистика использования
-            </p>
-          </Link>
-
-          <Link
-            href="/parental-tests"
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            <h2 className="text-lg font-semibold mb-2">Родительский контроль</h2>
-            <p className="text-gray-600 text-sm">
-              Математические тесты для доступа к настройкам
-            </p>
-          </Link>
-
-          <Link
-            href="/promotions"
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            <h2 className="text-lg font-semibold mb-2">Скидки и акции</h2>
-            <p className="text-gray-600 text-sm">
-              Персональные и общие промо-баннеры в приложении
-            </p>
-          </Link>
-
-          <Link
-            href="/onboarding"
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            <h2 className="text-lg font-semibold mb-2">Онбординг</h2>
-            <p className="text-gray-600 text-sm">
-              Редактирование первых 3 экранов приложения
-            </p>
-          </Link>
-
-
-        </div>
-      </main>
-    </div>
+        ))}
+      </div>
+    </AdminShell>
   );
 }
 
