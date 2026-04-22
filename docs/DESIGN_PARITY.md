@@ -56,10 +56,10 @@ Status legend: ⬜ not started · 🟡 in progress · ✅ pixel-perfect
 | 5 | 2.1.1 Favorite categories & animals, newbie state | `1:7213` | `ParentCabinetView.swift` (empty state = current) | 🟡 newbie = default |
 | 6 | 2.1.2 Buy button | `1:7820` | `ParentCabinetView.swift` (CTA) | ⬜ |
 | 7 | 2.1.3 After using categories | `1:7889` | `ParentCabinetView.swift` (populated) | ⬜ needs analytics |
-| 8 | 2.2.1 Sections sequence | `1:7304` | `CategoryOrderView.swift` | ⬜ needs restyle |
-| 9 | 2.3.1 Language | `1:7487` | `LanguagePickerView.swift` | ⬜ needs restyle |
-| 10 | 2.4.1 My purchases. Newbie user | `1:7571` | `PurchasesView.swift` (empty) | ⬜ needs restyle |
-| 11 | 2.4.2 My purchases. Profi user | `1:7707` | `PurchasesView.swift` (populated) | ⬜ needs restyle |
+| 8 | 2.2.1 Sections sequence | `1:7304` | `CategoryOrderView.swift` | 🟡 restyled, persist-order TODO |
+| 9 | 2.3.1 Language | `1:7487` | `LanguagePickerView.swift` | ✅ restyled |
+| 10 | 2.4.1 My purchases. Newbie user | `1:7571` | `PurchasesView.swift` (empty) | 🟡 needs tiger asset |
+| 11 | 2.4.2 My purchases. Profi user | `1:7707` | `PurchasesView.swift` (populated) | 🟡 needs real receipt data |
 | 12 | 2.5.1 Rate app | `1:7638` | native `SKStoreReviewController` via SettingsRow | ✅ |
 
 ### Error states
