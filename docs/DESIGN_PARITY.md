@@ -38,9 +38,16 @@ Status legend: ⬜ not started · 🟡 in progress · ✅ pixel-perfect
 ### Main flow
 | # | Figma section | Node ID | iOS file (target) | Status |
 |---|---|---|---|---|
-| 1 | 0. Main flow (Splash → Notifications → Main → Animal card) | `1:6649` | `OnboardingView.swift`, `SplashView.swift` (new) | ⬜ |
+| 1 | 0. Main flow (Splash → Notifications → Main → Animal card) | `1:6649` | `SplashView.swift`, `MainTabView.swift`, `AnimalDetailView.swift` | 🟡 tokens done, assets pending |
 | 2 | 1. Buy categories | `1:6753` | `PurchaseView.swift` | ⬜ |
-| 3 | 1.1 Categories content | `1:8009` | `CategoryGridView.swift`, `AnimalDetailView.swift` | ⬜ |
+| 3 | 1.1 Categories content | `1:8009` | `MainTabView.swift` (grid) + `AnimalDetailView.swift` | 🟡 grid done |
+
+### Main screen details (1:6650)
+- **MainHeadline** (`Components/MainHeadline.swift`) — 🟡 home + title + profile button
+- **CategoryHero** (`Components/CategoryHero.swift`) — 🟡 219pt hero illustration
+- **AnimalBoard** (`Components/AnimalBoard.swift`) — ✅ 4-col grid
+- **CategoryTabBar** (`Components/CategoryTabBar.swift`) — 🟡 translucent pill w/ theme
+- **CategoryTheme** (`CategoryTheme.swift`) — ✅ Pets/Farm/Forest/Sea/Pink palettes
 
 ### Cabinet (Parent settings)
 | # | Figma section | Node ID | iOS file (target) | Status |

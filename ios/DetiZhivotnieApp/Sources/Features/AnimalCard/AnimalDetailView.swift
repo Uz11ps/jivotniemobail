@@ -1,119 +1,169 @@
+//
+//  AnimalDetailView.swift
+//  DetiZhivotnieApp
+//
+//  Figma: `1:6664` — Animal card (390×844).
+//  Full-screen modal with a solid themed background, the animal's name as a
+//  large white title at top, and the animal illustration/animation centered.
+//  Tap anywhere to dismiss and return to Main screen.
+//
+//  Audio: on appear, plays narrator voice ("This is <name>") then the
+//  animal's own sound. Narrator uses bundled voice asset → falls back to TTS.
+//
+
 import SwiftUI
 import Lottie
 
 struct AnimalDetailView: View {
     let animal: Animal
     let categoryId: String
+
     @StateObject private var assetService = AssetService()
     @StateObject private var audioService = AudioService()
-    @StateObject private var contentService = ContentService()
     @StateObject private var analyticsService = AnalyticsService()
     @EnvironmentObject var localizationService: LocalizationService
-    
-    @State private var bgImage: UIImage?
-    @State private var animationView: LottieAnimationView?
-    @State private var isPlaying = false
-    
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var previewImage: UIImage?
+    @State private var hasStartedPlayback = false
+    @State private var tapHintVisible = true
+
+    private var theme: CategoryTheme {
+        CategoryTheme.theme(for: categoryId)
+    }
+
     var body: some View {
         ZStack {
-            if let bg = bgImage {
-                Image(uiImage: bg)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .ignoresSafeArea()
-            } else {
-                Color.gray.opacity(0.3)
-            }
-            
-            VStack(spacing: 30) {
-                Spacer()
-                
-                // Анимация или превью
-                if let animationView = animationView {
-                    LottieView(animationView: animationView)
-                        .frame(width: 200, height: 200)
-                }
-                
-                // Название
+            // Solid themed background (matches Main screen category theme)
+            theme.background
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Title
                 Text(localizationService.localized(animal.name))
-                    .font(.system(size: 48, weight: .bold))
-                    .foregroundColor(.white)
-                    .shadow(color: .black.opacity(0.5), radius: 5)
-                
-                // Инструкция
-                Text("Нажмите на животное, чтобы услышать его голос")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                    .shadow(color: .black.opacity(0.5), radius: 5)
-                
+                    .dsStyle(.largeTitleBold)
+                    .foregroundColor(theme.label)
+                    .padding(.top, DS.Gap.gap1000)    // 40pt from safe area
+                    .padding(.horizontal, DS.Gap.gap500)
+
                 Spacer()
+
+                // Animal visual (photo for now; Lottie/video wire-up follows)
+                Group {
+                    if let image = previewImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        ProgressView().tint(theme.label)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, DS.Gap.gap600)
+
+                Spacer()
+            }
+
+            // Tap hint — fades out after first tap
+            if tapHintVisible {
+                TapHintHand()
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+                    .padding(.trailing, DS.Gap.gap600)
+                    .padding(.top, 180)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             }
         }
+        .contentShape(Rectangle())
         .onTapGesture {
-            Task {
-                await playAnimalSound()
-            }
+            // Per Figma flow: tap anywhere dismisses and returns to Main.
+            dismiss()
         }
         .task {
             await loadAssets()
+            // Auto-play narrator + animal sound once on appear.
+            if !hasStartedPlayback {
+                hasStartedPlayback = true
+                await playAnimalScenario()
+            }
         }
     }
-    
+
+    // MARK: - Assets
+
     private func loadAssets() async {
-        // Загружаем фон
         do {
-            bgImage = try await assetService.loadImage(from: animal.bgAssetPath)
+            previewImage = try await assetService.loadImage(from: animal.previewAssetPath)
         } catch {
-            print("Ошибка загрузки фона: \(error)")
-        }
-        
-        // Загружаем анимацию
-        if let animationPath = animal.animationAssetPath {
-            // Загрузка Lottie анимации
-            // Реализация зависит от библиотеки Lottie
-        } else if let videoPath = animal.animationVideoAssetPath {
-            // Загрузка видео анимации
+            // Keep placeholder
         }
     }
-    
-    private func playAnimalSound() async {
+
+    // MARK: - Audio scenario
+
+    private func playAnimalScenario() async {
         let animalName = localizationService.localized(animal.name)
-        
-        // Проигрываем голос (если есть) или TTS
-        if let voicePath = animal.voiceAssetPath,
-           let voiceUrl = localizationService.currentLanguage == .ru ? voicePath.ru : voicePath.en,
-           !voiceUrl.isEmpty {
-            // Загружаем и проигрываем аудио файл
+
+        // 1. Narrator voice ("Это <name>" / "This is <name>")
+        if let voiceAssets = animal.voiceAssetPath,
+           let voicePath = (localizationService.currentLanguage == .ru ? voiceAssets.ru : voiceAssets.en),
+           !voicePath.isEmpty {
             do {
-                let data = try await assetService.loadAudioData(from: voiceUrl)
+                let data = try await assetService.loadAudioData(from: voicePath)
                 try await audioService.playSound(from: data)
             } catch {
-                // Fallback на TTS
-                await audioService.playVoice(text: "Это \(animalName)", language: localizationService.currentLanguage.rawValue)
+                await audioService.playVoice(
+                    text: localizationService.currentLanguage == .ru ? "Это \(animalName)" : "This is a \(animalName)",
+                    language: localizationService.currentLanguage.rawValue
+                )
             }
         } else {
-            await audioService.playVoice(text: "Это \(animalName)", language: localizationService.currentLanguage.rawValue)
+            await audioService.playVoice(
+                text: localizationService.currentLanguage == .ru ? "Это \(animalName)" : "This is a \(animalName)",
+                language: localizationService.currentLanguage.rawValue
+            )
         }
-        
-        // После голоса проигрываем звук животного
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 секунда
-        
+
+        // Brief pause between narrator and animal sound
+        try? await Task.sleep(nanoseconds: 500_000_000)
+
+        // 2. Animal's own sound
         do {
             let soundData = try await assetService.loadAudioData(from: animal.soundAssetPath)
             try await audioService.playSound(from: soundData)
-            await analyticsService.logEvent(eventType: "animal_sound_play", categoryId: categoryId, animalId: animal.id)
+            await analyticsService.logEvent(
+                eventType: "animal_sound_play",
+                categoryId: categoryId,
+                animalId: animal.id
+            )
         } catch {
-            print("Ошибка проигрывания звука: \(error)")
+            // Silent fail — analytics will show this as "loaded but no sound"
         }
     }
 }
 
-// Временная заглушка для LottieView
+// MARK: - Tap hint
+
+private struct TapHintHand: View {
+    @State private var pulse = false
+    var body: some View {
+        Image(systemName: "hand.point.up.fill")
+            .font(.system(size: 60, weight: .regular))
+            .foregroundStyle(DS.Palette.Neutral.n0.opacity(0.35))
+            .scaleEffect(pulse ? 1.1 : 1.0)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    pulse = true
+                }
+            }
+    }
+}
+
+// MARK: - Lottie wrapper (kept for future animation wire-up)
+
 struct LottieView: UIViewRepresentable {
     let animationView: LottieAnimationView
-    
+
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
         view.addSubview(animationView)
@@ -126,6 +176,6 @@ struct LottieView: UIViewRepresentable {
         ])
         return view
     }
-    
+
     func updateUIView(_ uiView: UIView, context: Context) {}
 }
