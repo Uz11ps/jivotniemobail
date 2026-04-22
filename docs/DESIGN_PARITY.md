@@ -38,9 +38,9 @@ Status legend: ⬜ not started · 🟡 in progress · ✅ pixel-perfect
 ### Main flow
 | # | Figma section | Node ID | iOS file (target) | Status |
 |---|---|---|---|---|
-| 1 | 0. Main flow (Splash → Notifications → Main → Animal card) | `1:6649` | `SplashView.swift`, `MainTabView.swift`, `AnimalDetailView.swift` | 🟡 tokens done, assets pending |
-| 2 | 1. Buy categories | `1:6753` | `PurchaseView.swift` | ⬜ |
-| 3 | 1.1 Categories content | `1:8009` | `MainTabView.swift` (grid) + `AnimalDetailView.swift` | 🟡 grid done |
+| 1 | 0. Main flow (Splash → Notifications → Main → Animal card) | `1:6649` | `SplashView.swift`, `MainTabView.swift`, `AnimalDetailView.swift` | 🟡 layout done, hero/splash video assets pending |
+| 2 | 1. Buy categories | `1:6753` | `PurchaseView.swift`, `SpecialOfferView.swift`, `PresaleButton.swift` | 🟡 layout done, illustration art pending |
+| 3 | 1.1 Categories content | `1:8009` | `MainTabView.swift` (grid) + `AnimalDetailView.swift` | ✅ grid + detail done |
 
 ### Main screen details (1:6650)
 - **MainHeadline** (`Components/MainHeadline.swift`) — 🟡 home + title + profile button
@@ -65,7 +65,7 @@ Status legend: ⬜ not started · 🟡 in progress · ✅ pixel-perfect
 ### Error states
 | # | Figma section | Node ID | iOS file (target) | Status |
 |---|---|---|---|---|
-| 13 | 3. Error states | `1:7192` | `ErrorView.swift` (new) | ⬜ |
+| 13 | 3. Error states | `1:7192` | `ErrorStateView.swift` (new) | ✅ both variants (generic + offline) |
 
 ---
 

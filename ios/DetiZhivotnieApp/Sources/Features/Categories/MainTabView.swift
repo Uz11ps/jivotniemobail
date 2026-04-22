@@ -21,8 +21,8 @@ struct MainTabView: View {
     @State private var selectedCategoryId: String?
     @State private var selectedAnimalForNavigation: Animal?
     @State private var showProfile = false
-    @State private var showPurchaseSheet = false
-    @State private var lockedCategoryForSheet: Category?
+    @State private var showPurchaseGate = false      // Parent gate for paywall
+    @State private var isPerformingPurchase = false
 
     var body: some View {
         NavigationStack {
@@ -64,6 +64,21 @@ struct MainTabView: View {
                     }
                 }
 
+                // ── Presale button (shown only when viewing a locked category) ──
+                if isSelectedLocked {
+                    VStack {
+                        Spacer()
+                        PresaleButton(
+                            priceText: priceText,
+                            theme: theme,
+                            onTap: { showPurchaseGate = true }
+                        )
+                        .padding(.bottom, 120 + DS.Gap.gap400)   // above tab bar
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    .animation(.spring(response: 0.35, dampingFraction: 0.85), value: isSelectedLocked)
+                }
+
                 // ── Floating tab bar ──
                 VStack {
                     Spacer()
@@ -73,8 +88,10 @@ struct MainTabView: View {
                         purchasedProductIds: iapService.purchasedProductIds,
                         themeForSelected: theme,
                         onTapLocked: { category in
-                            lockedCategoryForSheet = category
-                            showPurchaseSheet = true
+                            // Per Figma: tapping a locked tab still switches to
+                            // the category (so user sees its hero + muted grid)
+                            // and surfaces the presale button.
+                            selectedCategoryId = category.id
                         }
                     )
                     .padding(.bottom, DS.Gap.gap400)
@@ -103,10 +120,15 @@ struct MainTabView: View {
                 CabinetEntryFlow()
                     .environmentObject(localizationService)
             }
-            .sheet(isPresented: $showPurchaseSheet) {
-                if let cat = lockedCategoryForSheet {
-                    PurchaseView(category: cat)
-                        .environmentObject(localizationService)
+            .fullScreenCover(isPresented: $showPurchaseGate) {
+                if let category = selectedCategory {
+                    ParentalGateView(
+                        onSuccess: {
+                            showPurchaseGate = false
+                            Task { await attemptPurchase(for: category) }
+                        },
+                        onCancel: { showPurchaseGate = false }
+                    )
                 }
             }
         }
@@ -140,5 +162,35 @@ struct MainTabView: View {
             return !iapService.purchasedProductIds.contains(iap)
         }
         return true
+    }
+
+    private var priceText: String {
+        guard let category = selectedCategory,
+              let productId = category.iapProductId,
+              let product = iapService.products.first(where: { $0.id == productId }) else {
+            return "—"
+        }
+        return product.displayPrice
+    }
+
+    // MARK: - Purchase flow
+
+    private func attemptPurchase(for category: Category) async {
+        guard !isPerformingPurchase,
+              let productId = category.iapProductId,
+              let product = iapService.products.first(where: { $0.id == productId }) else { return }
+        isPerformingPurchase = true
+        defer { isPerformingPurchase = false }
+        do {
+            if try await iapService.purchase(product) {
+                await AnalyticsService().logEvent(
+                    eventType: "purchase_success",
+                    productId: product.id,
+                    categoryId: category.id
+                )
+            }
+        } catch {
+            // Silent — user can re-trigger via the presale button.
+        }
     }
 }
