@@ -99,8 +99,8 @@ struct MainTabView: View {
                 try? await contentService.loadAnimals(for: id)
                 await AnalyticsService().logEvent(eventType: "category_open", categoryId: id)
             }
-            .sheet(isPresented: $showProfile) {
-                ProfileView()
+            .fullScreenCover(isPresented: $showProfile) {
+                CabinetEntryFlow()
                     .environmentObject(localizationService)
             }
             .sheet(isPresented: $showPurchaseSheet) {
