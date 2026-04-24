@@ -17,36 +17,31 @@ struct OnboardingView: View {
     private var pages: [OnboardingPage.Model] {
         let isRu = localizationService.currentLanguage == .ru
         return [
-            .init(
-                titleRu: "Добро пожаловать",
-                titleEn: "Welcome",
-                subtitleRu: "Изучайте животных вместе с нами",
-                subtitleEn: "Explore animals with us",
+            OnboardingPage.Model(
+                title: isRu ? "Добро пожаловать" : "Welcome",
+                subtitle: isRu
+                    ? "Изучайте животных вместе с нами"
+                    : "Explore animals with us",
                 systemIcon: "pawprint.fill",
                 tint: DS.Palette.LightBlue.c500
             ),
-            .init(
-                titleRu: "Анимации и звуки",
-                titleEn: "Animations and sounds",
-                subtitleRu: "Слушайте голоса животных и смотрите анимации",
-                subtitleEn: "Hear animal sounds and watch animations",
+            OnboardingPage.Model(
+                title: isRu ? "Анимации и звуки" : "Animations and sounds",
+                subtitle: isRu
+                    ? "Слушайте голоса животных и смотрите анимации"
+                    : "Hear animal sounds and watch animations",
                 systemIcon: "waveform",
                 tint: DS.Palette.Pink.c500
             ),
-            .init(
-                titleRu: "Начните прямо сейчас",
-                titleEn: "Let's get started",
-                subtitleRu: "Выберите категорию и начните изучение",
-                subtitleEn: "Pick a category and start exploring",
+            OnboardingPage.Model(
+                title: isRu ? "Начните прямо сейчас" : "Let's get started",
+                subtitle: isRu
+                    ? "Выберите категорию и начните изучение"
+                    : "Pick a category and start exploring",
                 systemIcon: "sparkles",
                 tint: DS.Palette.Yellow.c500
             )
-        ].map { .init(
-            title: isRu ? $0.titleRu : $0.titleEn,
-            subtitle: isRu ? $0.subtitleRu : $0.subtitleEn,
-            systemIcon: $0.systemIcon,
-            tint: $0.tint
-        )}
+        ]
     }
 
     var body: some View {
@@ -101,28 +96,6 @@ struct OnboardingPage: View {
         let subtitle: String
         let systemIcon: String
         let tint: Color
-
-        // Localised fallbacks used by OnboardingView to build pages.
-        init(
-            title: String, subtitle: String,
-            systemIcon: String, tint: Color
-        ) {
-            self.title = title
-            self.subtitle = subtitle
-            self.systemIcon = systemIcon
-            self.tint = tint
-        }
-
-        init(
-            titleRu: String, titleEn: String,
-            subtitleRu: String, subtitleEn: String,
-            systemIcon: String, tint: Color
-        ) {
-            self.title = titleEn
-            self.subtitle = subtitleEn
-            self.systemIcon = systemIcon
-            self.tint = tint
-        }
     }
 
     let model: Model

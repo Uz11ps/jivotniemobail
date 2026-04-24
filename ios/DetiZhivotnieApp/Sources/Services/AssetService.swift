@@ -1,9 +1,16 @@
 import Foundation
+import FirebaseCore
 import FirebaseStorage
 import UIKit
 
-class AssetService {
-    private let storage = Storage.storage()
+class AssetService: ObservableObject {
+    // Lazy: only resolves when Firebase has been configured (Storage.storage()
+    // asserts on the default app, which doesn't exist without a bundled
+    // GoogleService-Info.plist).
+    private var storage: Storage? {
+        guard FirebaseApp.app() != nil else { return nil }
+        return Storage.storage()
+    }
     private let cache = NSCache<NSString, UIImage>()
     private let fileManager = FileManager.default
     
@@ -34,6 +41,7 @@ class AssetService {
         }
         
         // Загружаем из Storage
+        guard let storage else { throw AssetError.firebaseUnavailable }
         let storageRef = storage.reference(forURL: path)
         let data = try await storageRef.data(maxSize: 10 * 1024 * 1024)
         
@@ -56,6 +64,7 @@ class AssetService {
             return try Data(contentsOf: localURL)
         }
         
+        guard let storage else { throw AssetError.firebaseUnavailable }
         let storageRef = storage.reference(forURL: path)
         let data = try await storageRef.data(maxSize: 50 * 1024 * 1024)
         
@@ -66,5 +75,6 @@ class AssetService {
     
     enum AssetError: Error {
         case invalidImage
+        case firebaseUnavailable
     }
 }

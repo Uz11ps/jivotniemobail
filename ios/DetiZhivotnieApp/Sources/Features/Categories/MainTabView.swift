@@ -185,8 +185,8 @@ struct MainTabView: View {
             if try await iapService.purchase(product) {
                 await AnalyticsService().logEvent(
                     eventType: "purchase_success",
-                    productId: product.id,
-                    categoryId: category.id
+                    categoryId: category.id,
+                    productId: product.id
                 )
             }
         } catch {
