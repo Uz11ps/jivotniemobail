@@ -32,8 +32,14 @@ struct CategoryHero: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 219)
+            } else if let name = imagePath, UIImage(named: name) != nil {
+                // Bundled hero (e.g. "hero_pets") — used for demo/cached path.
+                Image(name)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: 219)
+                    .shadow(color: theme.tabBarOutline.opacity(0.15), radius: 10, y: 4)
             } else if hasAttemptedLoad || (imagePath?.isEmpty ?? true) {
-                // Playful SF Symbol placeholder sized for the 219pt hero slot.
                 Image(systemName: "pawprint.fill")
                     .font(.system(size: 110, weight: .regular))
                     .foregroundStyle(.white, theme.label.opacity(0.3))
@@ -54,7 +60,10 @@ struct CategoryHero: View {
 
     private func loadHero() async {
         defer { hasAttemptedLoad = true }
-        guard let path = imagePath, !path.isEmpty else { return }
+        guard let path = imagePath, !path.isEmpty,
+              UIImage(named: path) == nil,
+              path.hasPrefix("gs://") || path.hasPrefix("https://")
+        else { return }
         heroImage = try? await assetService.loadImage(from: path)
     }
 }

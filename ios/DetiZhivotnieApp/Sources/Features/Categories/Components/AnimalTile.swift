@@ -28,8 +28,13 @@ struct AnimalTile: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .padding(4)
+            } else if UIImage(named: animal.previewAssetPath) != nil {
+                // Bundled Assets.xcassets image (preferred for demo + cache).
+                Image(animal.previewAssetPath)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .padding(4)
             } else if hasAttemptedLoad || animal.previewAssetPath.isEmpty {
-                // Fallback once we know we won't get a remote image.
                 Image(systemName: animalFallbackSymbol)
                     .font(.system(size: 28, weight: .semibold))
                     .foregroundStyle(.white, theme.label.opacity(0.3))
@@ -62,7 +67,12 @@ struct AnimalTile: View {
 
     private func loadPreview() async {
         defer { hasAttemptedLoad = true }
-        guard !animal.previewAssetPath.isEmpty else { return }
+        // Bundled asset takes precedence — don't hit Firebase.
+        guard !animal.previewAssetPath.isEmpty,
+              UIImage(named: animal.previewAssetPath) == nil,
+              animal.previewAssetPath.hasPrefix("gs://")
+                || animal.previewAssetPath.hasPrefix("https://")
+        else { return }
         previewImage = try? await assetService.loadImage(from: animal.previewAssetPath)
     }
 

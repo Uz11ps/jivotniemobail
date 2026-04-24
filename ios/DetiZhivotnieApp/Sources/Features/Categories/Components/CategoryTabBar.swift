@@ -93,12 +93,15 @@ private struct CategoryTabIcon: View {
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                     } else {
+                        // SF Symbol fallback — the bundled "Property 1=..." assets
+                        // from img/ turned out to be solid colour placeholders, so
+                        // symbols look cleaner at the 56pt tab bar size.
                         Image(systemName: iconFallback)
                             .font(.system(size: 24, weight: .medium))
+                            .foregroundColor(iconTint)
                     }
                 }
-                .foregroundColor(iconTint)
-                .padding(10)
+                .padding(8)
 
                 if isLocked {
                     VStack {
@@ -143,7 +146,12 @@ private struct CategoryTabIcon: View {
 
     private func loadIcon() async {
         defer { hasAttemptedLoad = true }
-        guard !category.tabIconAssetPath.isEmpty else { return }
-        iconImage = try? await assetService.loadImage(from: category.tabIconAssetPath)
+        let path = category.tabIconAssetPath
+        guard !path.isEmpty,
+              UIImage(named: path) == nil,
+              UIImage(named: "tab_icon_\(category.id)") == nil,
+              path.hasPrefix("gs://") || path.hasPrefix("https://")
+        else { return }
+        iconImage = try? await assetService.loadImage(from: path)
     }
 }

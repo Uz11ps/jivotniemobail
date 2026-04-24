@@ -54,8 +54,15 @@ struct AnimalDetailView: View {
                         Image(uiImage: image)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
+                    } else if UIImage(named: animal.previewAssetPath) != nil {
+                        Image(animal.previewAssetPath)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
                     } else {
-                        ProgressView().tint(theme.label)
+                        Image(systemName: "pawprint.fill")
+                            .font(.system(size: 120, weight: .regular))
+                            .foregroundStyle(.white, theme.label.opacity(0.3))
+                            .symbolRenderingMode(.hierarchical)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -92,11 +99,13 @@ struct AnimalDetailView: View {
     // MARK: - Assets
 
     private func loadAssets() async {
-        do {
-            previewImage = try await assetService.loadImage(from: animal.previewAssetPath)
-        } catch {
-            // Keep placeholder
-        }
+        // Bundled asset path takes precedence; skip Firebase when we have one.
+        let path = animal.previewAssetPath
+        guard !path.isEmpty,
+              UIImage(named: path) == nil,
+              path.hasPrefix("gs://") || path.hasPrefix("https://")
+        else { return }
+        previewImage = try? await assetService.loadImage(from: path)
     }
 
     // MARK: - Audio scenario
