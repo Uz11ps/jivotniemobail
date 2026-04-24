@@ -20,28 +20,33 @@ struct AnimalTile: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: DS.Radius.l)
+            // Figma: corners/xxl = 28pt, fill/secondary translucent neutral.
+            RoundedRectangle(cornerRadius: DS.Radius.xxl)
                 .fill(isLocked ? theme.tileBackgroundLocked : theme.tileBackground)
 
-            if let image = previewImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .padding(4)
-            } else if UIImage(named: animal.previewAssetPath) != nil {
-                // Bundled Assets.xcassets image (preferred for demo + cache).
-                Image(animal.previewAssetPath)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .padding(4)
-            } else if hasAttemptedLoad || animal.previewAssetPath.isEmpty {
-                Image(systemName: animalFallbackSymbol)
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(.white, theme.label.opacity(0.3))
-                    .symbolRenderingMode(.hierarchical)
-            } else {
-                ProgressView()
-                    .tint(theme.label.opacity(0.8))
+            // Figma: animal picture inset 10% top/bottom from the tile edges.
+            GeometryReader { geo in
+                Group {
+                    if let image = previewImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else if UIImage(named: animal.previewAssetPath) != nil {
+                        Image(animal.previewAssetPath)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else if hasAttemptedLoad || animal.previewAssetPath.isEmpty {
+                        Image(systemName: animalFallbackSymbol)
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(.white, theme.label.opacity(0.3))
+                            .symbolRenderingMode(.hierarchical)
+                    } else {
+                        ProgressView()
+                            .tint(theme.label.opacity(0.8))
+                    }
+                }
+                .frame(width: geo.size.width, height: geo.size.height * 0.8)
+                .position(x: geo.size.width / 2, y: geo.size.height / 2)
             }
 
             if isLocked {

@@ -25,10 +25,12 @@ struct CategoryTheme {
     let presaleBlur: Color
 
     // MARK: - Pets — light blue (Figma Category tokens)
+    // Tile bg uses Figma `fill/secondary` (#F2F2F7 @ 40%) — translucent neutral
+    // that picks up the page's themed gradient underneath.
     static let pets = CategoryTheme(
         background:          DS.Palette.LightBlue.c500,
         backgroundLight:     DS.Palette.LightBlue.c400,
-        tileBackground:      DS.Palette.LightBlue.c400,
+        tileBackground:      Color(hex: 0xF2F2F7, alpha: 0.4),
         tileBackgroundLocked: Color(hex: 0x90C8FF, alpha: 0.55),
         label:               DS.Palette.Neutral.n0,
         tabBar:              DS.Palette.LightBlue.c600,
@@ -42,7 +44,7 @@ struct CategoryTheme {
     static let farm = CategoryTheme(
         background:          DS.Palette.Orange.c500,
         backgroundLight:     DS.Palette.Orange.c400,
-        tileBackground:      DS.Palette.Orange.c400,
+        tileBackground:      Color(hex: 0xF2F2F7, alpha: 0.4),
         tileBackgroundLocked: Color(hex: 0xFFC76D, alpha: 0.55),
         label:               DS.Palette.Neutral.n0,
         tabBar:              DS.Palette.Orange.c600,
@@ -56,7 +58,7 @@ struct CategoryTheme {
     static let forest = CategoryTheme(
         background:          DS.Palette.Green.c500,
         backgroundLight:     DS.Palette.Green.c400,
-        tileBackground:      DS.Palette.Green.c400,
+        tileBackground:      Color(hex: 0xF2F2F7, alpha: 0.4),
         tileBackgroundLocked: Color(hex: 0x7DC15A, alpha: 0.55),
         label:               DS.Palette.Neutral.n0,
         tabBar:              DS.Palette.Green.c600,
@@ -70,7 +72,7 @@ struct CategoryTheme {
     static let savannah = CategoryTheme(
         background:          DS.Palette.Yellow.c500,
         backgroundLight:     DS.Palette.Yellow.c400,
-        tileBackground:      DS.Palette.Yellow.c400,
+        tileBackground:      Color(hex: 0xF2F2F7, alpha: 0.4),
         tileBackgroundLocked: Color(hex: 0xFFE6A6, alpha: 0.55),
         label:               DS.Palette.Neutral.n0,
         tabBar:              DS.Palette.Yellow.c600,
@@ -84,7 +86,7 @@ struct CategoryTheme {
     static let pond = CategoryTheme(
         background:          DS.Palette.Turquoise.c500,
         backgroundLight:     DS.Palette.Turquoise.c400,
-        tileBackground:      DS.Palette.Turquoise.c400,
+        tileBackground:      Color(hex: 0xF2F2F7, alpha: 0.4),
         tileBackgroundLocked: Color(hex: 0x80CEC9, alpha: 0.55),
         label:               DS.Palette.Neutral.n0,
         tabBar:              DS.Palette.Turquoise.c600,
@@ -98,7 +100,7 @@ struct CategoryTheme {
     static let jungle = CategoryTheme(
         background:          DS.Palette.Green.c600,
         backgroundLight:     DS.Palette.Green.c500,
-        tileBackground:      DS.Palette.Green.c500,
+        tileBackground:      Color(hex: 0xF2F2F7, alpha: 0.4),
         tileBackgroundLocked: Color(hex: 0x49832E, alpha: 0.55),
         label:               DS.Palette.Neutral.n0,
         tabBar:              DS.Palette.Green.c700,
