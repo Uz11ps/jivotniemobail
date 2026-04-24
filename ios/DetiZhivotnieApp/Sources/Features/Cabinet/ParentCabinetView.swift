@@ -270,9 +270,11 @@ private struct CategoryIconAsync: View {
     private var fallbackSymbol: String {
         switch item.id {
         case "pets":                    return "house.fill"
-        case "farm", "barn":            return "tray.fill"
-        case "forest":                  return "tree.fill"
-        case "sea", "ocean", "island":  return "water.waves"
+        case "farm":     return "tray.fill"
+        case "forest":   return "tree.fill"
+        case "savannah": return "sun.max.fill"
+        case "pond":     return "water.waves"
+        case "jungle":   return "leaf.fill"
         default:                        return "pawprint.fill"
         }
     }

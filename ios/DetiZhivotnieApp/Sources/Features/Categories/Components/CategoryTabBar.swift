@@ -136,11 +136,13 @@ private struct CategoryTabIcon: View {
 
     private var iconFallback: String {
         switch category.id {
-        case "pets":         return "house.fill"
-        case "farm", "barn": return "tray.fill"
-        case "forest":       return "tree.fill"
-        case "sea":          return "water.waves"
-        default:             return "pawprint.fill"
+        case "pets":     return "house.fill"
+        case "farm":     return "tray.fill"
+        case "forest":   return "tree.fill"
+        case "savannah": return "sun.max.fill"
+        case "pond":     return "water.waves"
+        case "jungle":   return "leaf.fill"
+        default:         return "pawprint.fill"
         }
     }
 

@@ -3,8 +3,16 @@
 //  DetiZhivotnieApp
 //
 //  Fallback content used when Firebase isn't configured (e.g. running the
-//  simulator without a GoogleService-Info.plist). Lets reviewers see the
-//  full UI — Main/Cabinet/Paywall/Animal card — without a backend.
+//  simulator without a GoogleService-Info.plist). Category list + animal
+//  order match Figma section "1.1 Categories content" (node 1:8009).
+//
+//  Six categories in Figma-defined order:
+//    1. Pets       — free
+//    2. Farm       — paid
+//    3. Forest     — paid
+//    4. Savannah   — paid
+//    5. Pond       — paid
+//    6. Jungle     — paid
 //
 
 import Foundation
@@ -33,102 +41,133 @@ enum DemoContent {
             tabIconAssetPath: "hero_forest", gridCardStyle: nil
         ),
         Category(
-            id: "sea", order: 3, isVisible: true, isPaid: true,
-            iapProductId: "com.app.category.sea",
-            title: .init(ru: "Море", en: "Sea"),
-            tabIconAssetPath: "hero_sea", gridCardStyle: nil
+            id: "savannah", order: 3, isVisible: true, isPaid: true,
+            iapProductId: "com.app.category.savannah",
+            title: .init(ru: "Саванна", en: "Savannah"),
+            tabIconAssetPath: "hero_savannah", gridCardStyle: nil
         ),
         Category(
-            id: "dream", order: 4, isVisible: true, isPaid: true,
-            iapProductId: "com.app.category.dream",
-            title: .init(ru: "Сказка", en: "Dream"),
-            tabIconAssetPath: "hero_dream", gridCardStyle: nil
+            id: "pond", order: 4, isVisible: true, isPaid: true,
+            iapProductId: "com.app.category.pond",
+            title: .init(ru: "Пруд", en: "Pond"),
+            tabIconAssetPath: "hero_pond", gridCardStyle: nil
+        ),
+        Category(
+            id: "jungle", order: 5, isVisible: true, isPaid: true,
+            iapProductId: "com.app.category.jungle",
+            title: .init(ru: "Джунгли", en: "Jungle"),
+            tabIconAssetPath: "hero_jungle", gridCardStyle: nil
         )
     ]
 
-    // MARK: - Animals
+    // MARK: - Animals — order matches Figma node 1:8009
 
     static func animals(for categoryId: String) -> [Animal] {
         switch categoryId {
         case "pets":
             return makeAnimals([
-                ("cat",     "Кот",      "Cat"),
-                ("rabbit",  "Кролик",   "Rabbit"),
-                ("frog",    "Лягушка",  "Frog"),
-                ("hamster", "Хомяк",    "Hamster"),
-                ("snail",   "Улитка",   "Snail"),
-                ("ferret",  "Хорёк",    "Ferret"),
-                ("parrot",  "Попугай",  "Parrot"),
-                ("mouse",   "Мышь",     "Mouse"),
-                ("turtle",  "Черепаха", "Turtle"),
-                ("dog",     "Собака",   "Dog"),
-                ("guineapig","Морская свинка","Guinea pig")
+                ("cat",       "Кот",             "Cat"),
+                ("rabbit",    "Кролик",          "Rabbit"),
+                ("iguana",    "Игуана",          "Iguana"),
+                ("hamster",   "Хомяк",           "Hamster"),
+                ("snail",     "Улитка",          "Snail"),
+                ("ferret",    "Хорёк",           "Ferret"),
+                ("parrot",    "Попугай",         "Parrot"),
+                ("rat",       "Крыса",           "Rat"),
+                ("turtle",    "Черепаха",        "Turtle"),
+                ("dog",       "Собака",          "Dog"),
+                ("chinchilla","Шиншилла",        "Chinchilla"),
+                ("guineapig", "Морская свинка",  "Guinea pig")
             ], category: "pets")
+
         case "farm":
             return makeAnimals([
-                ("cow",     "Корова",   "Cow"),
-                ("sheep",   "Овца",     "Sheep"),
-                ("pig",     "Свинья",   "Pig"),
-                ("horse",   "Лошадь",   "Horse"),
-                ("chicken", "Курица",   "Chicken"),
-                ("rooster", "Петух",    "Rooster"),
-                ("goat",    "Коза",     "Goat"),
-                ("duck",    "Утка",     "Duck"),
-                ("donkey",  "Осёл",     "Donkey"),
-                ("bunny",   "Крольчонок","Bunny")
+                ("horse",   "Лошадь",  "Horse"),
+                ("pig",     "Свинья",  "Pig"),
+                ("cow",     "Корова",  "Cow"),
+                ("chicken", "Курица",  "Chicken"),
+                ("sheep",   "Овца",    "Sheep"),
+                ("quail",   "Перепёл", "Quail"),
+                ("ostrich", "Страус",  "Ostrich"),
+                ("goose",   "Гусь",    "Goose"),
+                ("deer",    "Олень",   "Deer"),
+                ("bee",     "Пчела",   "Bee"),
+                ("camel",   "Верблюд", "Camel"),
+                ("llama",   "Лама",    "Llama")
             ], category: "farm")
+
         case "forest":
             return makeAnimals([
-                ("bear",    "Медведь",  "Bear"),
-                ("wolf",    "Волк",     "Wolf"),
-                ("fox",     "Лиса",     "Fox"),
-                ("owl",     "Сова",     "Owl"),
-                ("squirrel","Белка",    "Squirrel"),
-                ("woodpecker","Дятел", "Woodpecker"),
-                ("hedgehog","Ёж",       "Hedgehog"),
-                ("deer",    "Олень",    "Deer"),
-                ("rabbit2", "Заяц",     "Hare"),
-                ("moose",   "Лось",     "Moose"),
-                ("badger",  "Барсук",   "Badger")
+                ("bear",       "Медведь", "Bear"),
+                ("wolf",       "Волк",    "Wolf"),
+                ("fox",        "Лиса",    "Fox"),
+                ("owl",        "Сова",    "Owl"),
+                ("squirrel",   "Белка",   "Squirrel"),
+                ("woodpecker", "Дятел",   "Woodpecker"),
+                ("hedgehog",   "Ёж",      "Hedgehog"),
+                ("elk",        "Лось",    "Elk"),
+                ("cuckoo",     "Кукушка", "Cuckoo"),
+                ("weasel",     "Ласка",   "Weasel"),
+                ("raven",      "Ворон",   "Raven"),
+                ("ant",        "Муравей", "Ant")
             ], category: "forest")
-        case "sea":
+
+        case "savannah":
             return makeAnimals([
-                ("dolphin", "Дельфин",  "Dolphin"),
-                ("whale",   "Кит",      "Whale"),
-                ("shark",   "Акула",    "Shark"),
-                ("octopus", "Осьминог", "Octopus"),
-                ("seahorse","Морской конёк","Seahorse"),
-                ("crab",    "Краб",     "Crab"),
-                ("fish",    "Рыбка",    "Fish"),
-                ("jellyfish","Медуза",  "Jellyfish"),
-                ("turtle2", "Черепаха", "Turtle"),
-                ("starfish","Морская звезда","Starfish"),
-                ("seal",    "Тюлень",   "Seal")
-            ], category: "sea")
-        case "dream":
+                ("lion",         "Лев",         "Lion"),
+                ("elephant",     "Слон",        "Elephant"),
+                ("leopard",      "Леопард",     "Leopard"),
+                ("rhinoceros",   "Носорог",     "Rhinoceros"),
+                ("giraffe",      "Жираф",       "Giraffe"),
+                ("zebra",        "Зебра",       "Zebra"),
+                ("warthog",      "Бородавочник","Warthog"),
+                ("meerkat",      "Сурикат",     "Meerkat"),
+                ("baboon",       "Бабуин",      "Baboon"),
+                ("vulture",      "Гриф",        "Vulture"),
+                ("hippopotamus", "Бегемот",     "Hippopotamus"),
+                ("wildebeest",   "Антилопа гну","Wildebeest")
+            ], category: "savannah")
+
+        case "pond":
             return makeAnimals([
-                ("unicorn", "Единорог",  "Unicorn"),
-                ("dragon",  "Дракон",    "Dragon"),
-                ("phoenix", "Феникс",    "Phoenix"),
-                ("pegasus", "Пегас",     "Pegasus"),
-                ("mermaid", "Русалка",   "Mermaid"),
-                ("yeti",    "Йети",      "Yeti"),
-                ("griffin", "Грифон",    "Griffin"),
-                ("kraken",  "Кракен",    "Kraken"),
-                ("sphinx",  "Сфинкс",    "Sphinx"),
-                ("fairy",   "Фея",       "Fairy"),
-                ("wizard",  "Волшебник", "Wizard")
-            ], category: "dream")
+                ("dragonfly",    "Стрекоза",     "Dragonfly"),
+                ("crayfish",     "Рак",          "Crayfish"),
+                ("beaver",       "Бобр",         "Beaver"),
+                ("triton",       "Тритон",       "Triton"),
+                ("frog",         "Лягушка",      "Frog"),
+                ("divingbeetle", "Жук-плавунец", "Diving beetle"),
+                ("waterstrider", "Водомерка",    "Water strider"),
+                ("duck",         "Утка",         "Duck"),
+                ("heron",        "Цапля",        "Heron"),
+                ("perch",        "Окунь",        "Perch"),
+                ("pike",         "Щука",         "Pike"),
+                ("butterfly",    "Бабочка",      "Butterfly")
+            ], category: "pond")
+
+        case "jungle":
+            return makeAnimals([
+                ("jaguar",      "Ягуар",     "Jaguar"),
+                ("sloth",       "Ленивец",   "Sloth"),
+                ("anaconda",    "Анаконда",  "Anaconda"),
+                ("crocodile",   "Крокодил",  "Crocodile"),
+                ("capybara",    "Капибара",  "Capybara"),
+                ("anteater",    "Муравьед",  "Anteater"),
+                ("chimpanzee",  "Шимпанзе",  "Chimpanzee"),
+                ("tiger",       "Тигр",      "Tiger"),
+                ("hummingbird", "Колибри",   "Hummingbird"),
+                ("mantis",      "Богомол",   "Mantis"),
+                ("chameleon",   "Хамелеон",  "Chameleon"),
+                ("panther",     "Пантера",   "Panther")
+            ], category: "jungle")
+
         default:
             return []
         }
     }
 
-    /// Populates previewAssetPath with the bundled asset-catalog name
-    /// `<category>_animal_<n>` that we transferred from `img/<Category>/Image<n>.png`.
-    /// Callers (AnimalTile / CategoryHero) check `UIImage(named:)` first, so
-    /// this doubles as a demo image AND a fallback slot name for later
-    /// Firebase-sourced overrides.
+    /// Builds demo animals with `previewAssetPath` pointing at the bundled
+    /// asset-catalog slot `<category>_animal_<n>`. Views check
+    /// `UIImage(named:)` first, so missing slots fall through to SF Symbols.
     private static func makeAnimals(
         _ rows: [(id: String, ru: String, en: String)],
         category: String
