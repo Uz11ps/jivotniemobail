@@ -40,23 +40,31 @@ struct ErrorStateView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.Gap.gap600)
 
-                // Illustration
+                // Illustration (prefer bundled Figma art, fall back to SF Symbols)
                 Group {
                     switch variant {
                     case .generic:
-                        Image(systemName: "laptopcomputer.slash")
-                            .font(.system(size: 140, weight: .regular))
-                            .foregroundStyle(DS.Color.Label.primary, DS.Palette.Neutral.n300)
-                            .symbolRenderingMode(.hierarchical)
-                    case .offline:
-                        ZStack(alignment: .top) {
-                            Image(systemName: "bird.fill")
+                        if UIImage(named: "error_mouse") != nil {
+                            Image("error_mouse").resizable().aspectRatio(contentMode: .fit)
+                        } else {
+                            Image(systemName: "laptopcomputer.slash")
                                 .font(.system(size: 140, weight: .regular))
-                                .foregroundStyle(DS.Palette.Yellow.c500)
-                            Image(systemName: "wifi.slash")
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(DS.Color.Label.primary.opacity(0.6))
-                                .offset(y: -16)
+                                .foregroundStyle(DS.Color.Label.primary, DS.Palette.Neutral.n300)
+                                .symbolRenderingMode(.hierarchical)
+                        }
+                    case .offline:
+                        if UIImage(named: "error_bird") != nil {
+                            Image("error_bird").resizable().aspectRatio(contentMode: .fit)
+                        } else {
+                            ZStack(alignment: .top) {
+                                Image(systemName: "bird.fill")
+                                    .font(.system(size: 140, weight: .regular))
+                                    .foregroundStyle(DS.Palette.Yellow.c500)
+                                Image(systemName: "wifi.slash")
+                                    .font(.system(size: 22, weight: .semibold))
+                                    .foregroundColor(DS.Color.Label.primary.opacity(0.6))
+                                    .offset(y: -16)
+                            }
                         }
                     }
                 }

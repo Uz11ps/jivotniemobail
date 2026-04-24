@@ -53,11 +53,20 @@ struct PurchasesView: View {
         VStack(spacing: DS.Gap.gap500) {
             Spacer()
 
-            // Tiger / animal hero (SF Symbol fallback until bundled asset lands)
-            Image(systemName: "pawprint.circle.fill")
-                .font(.system(size: 160, weight: .regular))
-                .foregroundStyle(DS.Palette.Orange.c500, DS.Palette.Orange.c100)
-                .shadow(color: DS.Palette.Orange.c600.opacity(0.3), radius: 20, y: 8)
+            // Tiger / animal hero (prefer bundled Figma art, fall back to SF Symbol)
+            Group {
+                if UIImage(named: "purchases_empty_tiger") != nil {
+                    Image("purchases_empty_tiger")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 220)
+                } else {
+                    Image(systemName: "pawprint.circle.fill")
+                        .font(.system(size: 160, weight: .regular))
+                        .foregroundStyle(DS.Palette.Orange.c500, DS.Palette.Orange.c100)
+                        .shadow(color: DS.Palette.Orange.c600.opacity(0.3), radius: 20, y: 8)
+                }
+            }
 
             Text("You haven't made any purchases yet.\nMaybe we should buy some?")
                 .dsStyle(.body)

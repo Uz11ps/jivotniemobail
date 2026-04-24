@@ -34,9 +34,17 @@ struct SpecialOfferView: View {
                 VStack(spacing: DS.Gap.gap500) {
                     // "SPECIAL OFFER" bubble text + discount badge
                     ZStack(alignment: .topTrailing) {
-                        SpecialOfferTitleArt()
-                            .frame(height: 120)
-                            .padding(.horizontal, DS.Gap.gap600)
+                        if UIImage(named: "special_offer_logo") != nil {
+                            Image("special_offer_logo")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: 120)
+                                .padding(.horizontal, DS.Gap.gap600)
+                        } else {
+                            SpecialOfferTitleArt()
+                                .frame(height: 120)
+                                .padding(.horizontal, DS.Gap.gap600)
+                        }
 
                         Text(discountBadgeText)
                             .dsStyle(.headlineSemi)
@@ -48,9 +56,18 @@ struct SpecialOfferView: View {
                     }
                     .padding(.top, DS.Gap.gap200)
 
-                    // Three animal heads (placeholder heroes until bundled art lands)
-                    HeroHeadsRow(images: heroImages)
-                        .frame(height: 140)
+                    // Three animal heads — prefer bundled Figma composition,
+                    // then Firebase-loaded per-offer heroAssets, then SF Symbols.
+                    Group {
+                        if UIImage(named: "special_offer_heads") != nil {
+                            Image("special_offer_heads")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                        } else {
+                            HeroHeadsRow(images: heroImages)
+                        }
+                    }
+                    .frame(height: 140)
 
                     // Title
                     Text(localizedTitle)
