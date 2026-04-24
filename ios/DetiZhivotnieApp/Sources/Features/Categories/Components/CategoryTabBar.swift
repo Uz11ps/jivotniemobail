@@ -92,10 +92,15 @@ private struct CategoryTabIcon: View {
                         Image(uiImage: image)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
+                    } else if UIImage(named: "nav_\(category.id)") != nil {
+                        // Bundled Figma SVG (nav_pets / nav_farm / …).
+                        // Rendered as template so we can tint per state.
+                        Image("nav_\(category.id)")
+                            .resizable()
+                            .renderingMode(.template)
+                            .aspectRatio(contentMode: .fit)
+                            .foregroundColor(iconTint)
                     } else {
-                        // SF Symbol fallback — the bundled "Property 1=..." assets
-                        // from img/ turned out to be solid colour placeholders, so
-                        // symbols look cleaner at the 56pt tab bar size.
                         Image(systemName: iconFallback)
                             .font(.system(size: 24, weight: .medium))
                             .foregroundColor(iconTint)
