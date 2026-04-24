@@ -3,8 +3,8 @@
 //  DetiZhivotnieApp
 //
 //  Figma: Animal board cells — rounded squares with a light tinted background
-//  and an animal photo that overflows the bottom slightly for a playful look.
-//  Replaces legacy `AnimalCard` (2-col grid) with the 4-col board layout.
+//  and an animal photo. Replaces legacy `AnimalCard` (2-col grid) with the
+//  4-col board layout.
 //
 
 import SwiftUI
@@ -16,6 +16,7 @@ struct AnimalTile: View {
 
     @StateObject private var assetService = AssetService()
     @State private var previewImage: UIImage?
+    @State private var hasAttemptedLoad = false
 
     var body: some View {
         ZStack {
@@ -27,13 +28,18 @@ struct AnimalTile: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .padding(4)
+            } else if hasAttemptedLoad || animal.previewAssetPath.isEmpty {
+                // Fallback once we know we won't get a remote image.
+                Image(systemName: animalFallbackSymbol)
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white, theme.label.opacity(0.3))
+                    .symbolRenderingMode(.hierarchical)
             } else {
                 ProgressView()
                     .tint(theme.label.opacity(0.8))
             }
 
             if isLocked {
-                // Subtle lock badge in corner
                 VStack {
                     HStack {
                         Spacer()
@@ -55,10 +61,46 @@ struct AnimalTile: View {
     }
 
     private func loadPreview() async {
-        do {
-            previewImage = try await assetService.loadImage(from: animal.previewAssetPath)
-        } catch {
-            // Keep placeholder
+        defer { hasAttemptedLoad = true }
+        guard !animal.previewAssetPath.isEmpty else { return }
+        previewImage = try? await assetService.loadImage(from: animal.previewAssetPath)
+    }
+
+    // MARK: - SF Symbol mapping for demo content
+    private var animalFallbackSymbol: String {
+        switch animal.id {
+        // Pets
+        case "cat":           return "cat.fill"
+        case "dog":           return "dog.fill"
+        case "rabbit":        return "hare.fill"
+        case "frog", "turtle":return "tortoise.fill"
+        case "hamster", "mouse", "chinchilla", "guineapig":
+                              return "mouse.fill"
+        case "snail":         return "ant.fill"
+        case "ferret":        return "pawprint.fill"
+        case "parrot":        return "bird.fill"
+        // Farm
+        case "cow", "sheep", "pig", "goat", "horse":
+                              return "pawprint.fill"
+        case "chicken", "rooster", "duck":
+                              return "bird.fill"
+        // Forest
+        case "bear":          return "pawprint.fill"
+        case "wolf", "fox":   return "dog.fill"
+        case "owl", "woodpecker": return "bird.fill"
+        case "squirrel":      return "hare.fill"
+        case "hedgehog":      return "ant.fill"
+        case "deer":          return "pawprint.fill"
+        // Sea
+        case "dolphin", "whale", "shark", "fish":
+                              return "fish.fill"
+        case "octopus", "seahorse", "jellyfish":
+                              return "fish.fill"
+        case "crab":          return "ant.fill"
+        // Dream
+        case "unicorn", "pegasus": return "sparkles"
+        case "dragon", "phoenix":  return "flame.fill"
+        default:              return "pawprint.fill"
         }
     }
 }

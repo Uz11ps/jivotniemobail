@@ -77,6 +77,7 @@ private struct CategoryTabIcon: View {
 
     @StateObject private var assetService = AssetService()
     @State private var iconImage: UIImage?
+    @State private var hasAttemptedLoad = false
 
     private let diameter: CGFloat = 56
 
@@ -92,7 +93,6 @@ private struct CategoryTabIcon: View {
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                     } else {
-                        // Placeholder emoji-style fallback
                         Image(systemName: iconFallback)
                             .font(.system(size: 24, weight: .medium))
                     }
@@ -142,10 +142,8 @@ private struct CategoryTabIcon: View {
     }
 
     private func loadIcon() async {
-        do {
-            iconImage = try await assetService.loadImage(from: category.tabIconAssetPath)
-        } catch {
-            // Keep system fallback
-        }
+        defer { hasAttemptedLoad = true }
+        guard !category.tabIconAssetPath.isEmpty else { return }
+        iconImage = try? await assetService.loadImage(from: category.tabIconAssetPath)
     }
 }

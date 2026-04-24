@@ -17,7 +17,11 @@ class ContentService: ObservableObject {
     @Published var offers: [Offer] = []
 
     func loadCategories() async throws {
-        guard let db else { return }
+        guard let db else {
+            // No Firebase — surface demo content so the app is explorable.
+            await MainActor.run { self.categories = DemoContent.categories }
+            return
+        }
         let snapshot = try await db.collection("categories")
             .whereField("isVisible", isEqualTo: true)
             .order(by: "order")
@@ -28,10 +32,20 @@ class ContentService: ObservableObject {
             category.id = doc.documentID
             return category
         }
+
+        // Still empty after a successful call? Fall back to demo too.
+        if categories.isEmpty {
+            await MainActor.run { self.categories = DemoContent.categories }
+        }
     }
 
     func loadAnimals(for categoryId: String) async throws {
-        guard let db else { return }
+        guard let db else {
+            await MainActor.run {
+                self.animals[categoryId] = DemoContent.animals(for: categoryId)
+            }
+            return
+        }
         let snapshot = try await db.collection("categories")
             .document(categoryId)
             .collection("animals")
@@ -46,7 +60,9 @@ class ContentService: ObservableObject {
         }
 
         await MainActor.run {
-            animals[categoryId] = animalsList
+            animals[categoryId] = animalsList.isEmpty
+                ? DemoContent.animals(for: categoryId)
+                : animalsList
         }
     }
 

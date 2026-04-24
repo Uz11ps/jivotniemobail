@@ -17,6 +17,7 @@ struct CategoryHero: View {
 
     @StateObject private var assetService = AssetService()
     @State private var heroImage: UIImage?
+    @State private var hasAttemptedLoad = false
 
     var body: some View {
         ZStack {
@@ -31,8 +32,14 @@ struct CategoryHero: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 219)
+            } else if hasAttemptedLoad || (imagePath?.isEmpty ?? true) {
+                // Playful SF Symbol placeholder sized for the 219pt hero slot.
+                Image(systemName: "pawprint.fill")
+                    .font(.system(size: 110, weight: .regular))
+                    .foregroundStyle(.white, theme.label.opacity(0.3))
+                    .symbolRenderingMode(.hierarchical)
+                    .shadow(color: theme.tabBarOutline.opacity(0.2), radius: 10, y: 4)
             } else {
-                // Placeholder — subtle shape
                 RoundedRectangle(cornerRadius: DS.Radius.xxl)
                     .fill(theme.backgroundLight.opacity(0.3))
                     .padding(.horizontal, DS.Gap.gap800)
@@ -46,12 +53,9 @@ struct CategoryHero: View {
     }
 
     private func loadHero() async {
-        guard let path = imagePath else { return }
-        do {
-            heroImage = try await assetService.loadImage(from: path)
-        } catch {
-            // Keep placeholder
-        }
+        defer { hasAttemptedLoad = true }
+        guard let path = imagePath, !path.isEmpty else { return }
+        heroImage = try? await assetService.loadImage(from: path)
     }
 }
 
