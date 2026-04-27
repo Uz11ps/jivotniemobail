@@ -42,9 +42,11 @@ export async function POST(req: Request) {
     headers[k] = v;
   });
 
-  const proto = req.headers.get('x-forwarded-proto') || 'http';
-  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'localhost';
-
+  // Return only relative paths (e.g. /uploads/foo.mp3) — the browser will
+  // resolve them against the current origin. Avoids two known issues:
+  //  1) Some hosting providers add `X-Forwarded-Proto: https` even when
+  //     HTTPS isn't terminated locally → we'd hand the browser broken URLs.
+  //  2) Hardcoding 127.0.0.1:3000 when the API is hit directly from the box.
   await ensureDir(UPLOADS_ROOT);
 
   const bb = Busboy({ headers, limits: { files: 1 } });
@@ -75,14 +77,13 @@ export async function POST(req: Request) {
             file.pipe(ws);
             ws.on('finish', () => {
               relPublicPath = `/uploads/${finalRel.replace(/\\/g, '/')}`;
-              fileUrl = `${proto}://${host}${relPublicPath}`;
+              fileUrl = relPublicPath;     // origin-relative — see comment above
               res();
             });
             ws.on('close', () => {
-              // some platforms emit only close
               if (!fileUrl || !relPublicPath) {
                 relPublicPath = `/uploads/${finalRel.replace(/\\/g, '/')}`;
-                fileUrl = `${proto}://${host}${relPublicPath}`;
+                fileUrl = relPublicPath;
               }
               res();
             });

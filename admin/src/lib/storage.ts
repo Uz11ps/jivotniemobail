@@ -44,10 +44,19 @@ export function getFileUrl(path: string): string {
   return `/uploads/${path}`;
 }
 
-// Поддержка legacy: если в Firestore уже лежит downloadURL, просто используем его.
+// Поддержка legacy: если в Firestore лежит абсолютный URL — пробуем извлечь
+// /uploads/... и сделать относительный путь, чтобы браузер сам подобрал
+// правильный scheme/host. Это лечит старые записи, где сервер вернул
+// https://… (а на проде https-а нет) или http://127.0.0.1:3000/...
 export function getFileUrlFromPathOrUrl(value: string): string {
   if (!value) return '';
   if (value.startsWith('http://') || value.startsWith('https://')) {
+    try {
+      const u = new URL(value);
+      if (u.pathname.startsWith('/uploads/')) return u.pathname + u.search;
+    } catch {
+      /* not a valid URL, return as-is */
+    }
     return value;
   }
   return getFileUrl(value);
