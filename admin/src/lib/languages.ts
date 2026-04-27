@@ -1,15 +1,19 @@
 // Поддерживаемые языки контента (имена, тексты, voice-аудио).
-// Менять можно — порядок здесь = порядок отображения в формах.
-// `code` должен быть ISO 639-1 (2 буквы), используется как ключ в Firestore.
+//
+// ⚠️ Это только default-сид для первого запуска и SSR. Реальный список
+// языков живёт в Firestore (collection `languages`) и редактируется
+// админом из UI на странице /languages. Используй хук `useLanguages()`
+// для получения актуального списка в компонентах.
 
 export interface AppLanguage {
   code: string;       // ISO 639-1
   nameRu: string;     // подпись для админки
   flag: string;       // emoji флаг для UI
   required?: boolean; // если true — нельзя сохранить без перевода
+  order?: number;     // порядок отображения; задаётся в Firestore
 }
 
-export const SUPPORTED_LANGUAGES: AppLanguage[] = [
+export const DEFAULT_LANGUAGES: AppLanguage[] = [
   { code: 'ru', nameRu: 'Русский',    flag: '🇷🇺', required: true },
   { code: 'en', nameRu: 'English',    flag: '🇬🇧', required: true },
   { code: 'es', nameRu: 'Español',    flag: '🇪🇸' },
@@ -27,14 +31,18 @@ export const SUPPORTED_LANGUAGES: AppLanguage[] = [
   { code: 'uk', nameRu: 'Українська',  flag: '🇺🇦' },
 ];
 
-export const LANGUAGE_CODES: string[] = SUPPORTED_LANGUAGES.map((l) => l.code);
+// Back-compat alias — old code may still import SUPPORTED_LANGUAGES.
+// New code should call useLanguages() instead.
+export const SUPPORTED_LANGUAGES: AppLanguage[] = DEFAULT_LANGUAGES;
 
-export const REQUIRED_LANGUAGE_CODES: string[] = SUPPORTED_LANGUAGES
+export const LANGUAGE_CODES: string[] = DEFAULT_LANGUAGES.map((l) => l.code);
+
+export const REQUIRED_LANGUAGE_CODES: string[] = DEFAULT_LANGUAGES
   .filter((l) => l.required)
   .map((l) => l.code);
 
 export function getLanguage(code: string): AppLanguage | undefined {
-  return SUPPORTED_LANGUAGES.find((l) => l.code === code);
+  return DEFAULT_LANGUAGES.find((l) => l.code === code);
 }
 
 /**

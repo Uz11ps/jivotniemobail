@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { uploadFileWithMeta, getFileUrlFromPathOrUrl } from '@/lib/storage';
-import { SUPPORTED_LANGUAGES } from '@/lib/languages';
+import { useLanguages } from '@/hooks/useLanguages';
 
 interface MultiLangAudioUploadProps {
   label: string;
@@ -25,6 +25,7 @@ export function MultiLangAudioUpload({
   value,
   onChange,
 }: MultiLangAudioUploadProps) {
+  const { languages } = useLanguages();
   const [activeLang, setActiveLang] = useState<string>('ru');
   const [uploadingLang, setUploadingLang] = useState<string | null>(null);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
@@ -58,7 +59,7 @@ export function MultiLangAudioUpload({
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    const codeSet = new Set(SUPPORTED_LANGUAGES.map((l) => l.code));
+    const codeSet = new Set(languages.map((l) => l.code));
     const matched: Array<{ code: string; file: File }> = [];
     const skipped: string[] = [];
 
@@ -108,7 +109,7 @@ export function MultiLangAudioUpload({
     }
   };
 
-  const filledCount = SUPPORTED_LANGUAGES.filter((l) => v[l.code] && (v[l.code] as string).length > 0).length;
+  const filledCount = languages.filter((l) => v[l.code] && (v[l.code] as string).length > 0).length;
   const currentUrl = v[activeLang] ? getFileUrlFromPathOrUrl(v[activeLang] as string) : null;
 
   return (
@@ -116,7 +117,7 @@ export function MultiLangAudioUpload({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <label className="text-sm font-semibold text-slate-700">{label}</label>
         <div className="flex items-center gap-3 text-xs text-slate-500">
-          <span>{filledCount}/{SUPPORTED_LANGUAGES.length} загружено</span>
+          <span>{filledCount}/{languages.length} загружено</span>
           <label className="cursor-pointer rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
             ⬆ Массовая загрузка
             <input
@@ -137,7 +138,7 @@ export function MultiLangAudioUpload({
       )}
 
       <div className="mb-3 flex flex-wrap gap-1.5">
-        {SUPPORTED_LANGUAGES.map((lang) => {
+        {languages.map((lang) => {
           const filled = !!(v[lang.code] && (v[lang.code] as string).length > 0);
           const isActive = activeLang === lang.code;
           return (

@@ -6,6 +6,7 @@ import {
   BarChart3,
   FolderKanban,
   GalleryVerticalEnd,
+  Globe,
   LogOut,
   PawPrint,
   ShieldCheck,
@@ -24,6 +25,7 @@ type AdminShellProps = {
 const navItems = [
   { href: '/dashboard', label: 'Главная', icon: Sparkles },
   { href: '/categories', label: 'Категории', icon: FolderKanban },
+  { href: '/languages', label: 'Языки', icon: Globe },
   { href: '/offers', label: 'Офферы', icon: Ticket },
   { href: '/analytics', label: 'Аналитика', icon: BarChart3 },
   { href: '/parental-tests', label: 'Тесты', icon: ShieldCheck },

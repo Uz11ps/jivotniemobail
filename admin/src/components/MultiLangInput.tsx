@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { SUPPORTED_LANGUAGES } from '@/lib/languages';
+import { useLanguages } from '@/hooks/useLanguages';
 
 type Variant = 'text' | 'textarea';
 
@@ -28,6 +28,7 @@ export function MultiLangInput({
   placeholder = '',
   showCopyTools = true,
 }: MultiLangInputProps) {
+  const { languages } = useLanguages();
   const [activeLang, setActiveLang] = useState<string>('ru');
   const v = value ?? {};
 
@@ -39,7 +40,7 @@ export function MultiLangInput({
     const src = v.ru || v.en || '';
     if (!src) return;
     const next: Record<string, string> = {};
-    for (const lang of SUPPORTED_LANGUAGES) {
+    for (const lang of languages) {
       next[lang.code] = (v[lang.code] && (v[lang.code] as string).length > 0)
         ? (v[lang.code] as string)
         : src;
@@ -47,14 +48,14 @@ export function MultiLangInput({
     onChange(next);
   };
 
-  const filledCount = SUPPORTED_LANGUAGES.filter((l) => (v[l.code] && (v[l.code] as string).length > 0)).length;
+  const filledCount = languages.filter((l) => (v[l.code] && (v[l.code] as string).length > 0)).length;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <label className="text-sm font-semibold text-slate-700">{label}</label>
         <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span>{filledCount}/{SUPPORTED_LANGUAGES.length} заполнено</span>
+          <span>{filledCount}/{languages.length} заполнено</span>
           {showCopyTools && (
             <button
               type="button"
@@ -69,7 +70,7 @@ export function MultiLangInput({
       </div>
 
       <div className="mb-3 flex flex-wrap gap-1.5">
-        {SUPPORTED_LANGUAGES.map((lang) => {
+        {languages.map((lang) => {
           const filled = !!(v[lang.code] && (v[lang.code] as string).length > 0);
           const isActive = activeLang === lang.code;
           return (
@@ -97,7 +98,7 @@ export function MultiLangInput({
         })}
       </div>
 
-      {SUPPORTED_LANGUAGES.map((lang) => {
+      {languages.map((lang) => {
         if (lang.code !== activeLang) return null;
         const cur = (v[lang.code] as string) || '';
         const ph = placeholder ? `${placeholder} (${lang.nameRu})` : lang.nameRu;
