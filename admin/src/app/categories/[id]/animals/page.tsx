@@ -16,22 +16,37 @@ import { getFileUrlFromPathOrUrl } from '@/lib/storage';
 import { AdminShell } from '@/components/AdminShell';
 import { pickLocalized } from '@/lib/languages';
 
+// Optional string that also accepts null/undefined coming back from Firestore.
+const optStr = z
+  .string()
+  .nullish()
+  .transform((v) => v ?? '');
+
+// Multilang map: accept null for individual values too (legacy data may have them).
+const langMap = z
+  .record(z.union([z.string(), z.null(), z.undefined()]))
+  .transform((v) => {
+    const out: Record<string, string> = {};
+    for (const [k, val] of Object.entries(v ?? {})) {
+      if (typeof val === 'string') out[k] = val;
+    }
+    return out;
+  });
+
 const animalSchema = z.object({
   order: z.number(),
   isVisible: z.boolean(),
-  // Multilang strings: validated as objects with at least ru filled.
-  name: z.record(z.string()).refine((v) => !!v.ru && v.ru.length > 0, {
+  name: langMap.refine((v) => !!v.ru && v.ru.length > 0, {
     message: 'RU обязателен',
   }),
-  topText: z.record(z.string()).optional(),
-  // Разрешаем пустые значения, чтобы можно было постепенно докидывать медиа.
-  previewAssetPath: z.string().optional(), // иконка в сетке
-  bgVideoAssetPath: z.string().optional(), // mp4 фон
-  bgAssetPath: z.string().optional(), // опциональный фолбэк-картинка
-  voiceAssetPath: z.record(z.string()).optional(), // голос на каждый язык
-  soundAssetPath: z.string().optional(), // аудио животного
-  animationAssetPath: z.string().optional(),
-  animationVideoAssetPath: z.string().optional(),
+  topText: langMap.nullish(),
+  previewAssetPath: optStr,
+  bgVideoAssetPath: optStr,
+  bgAssetPath: optStr,
+  voiceAssetPath: langMap.nullish(),
+  soundAssetPath: optStr,
+  animationAssetPath: optStr,
+  animationVideoAssetPath: optStr,
 });
 
 function AnimalsContent() {

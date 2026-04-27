@@ -15,20 +15,32 @@ import { useRouter } from 'next/navigation';
 import { AdminShell } from '@/components/AdminShell';
 import { pickLocalized } from '@/lib/languages';
 
+// Optional string that also accepts null/undefined from Firestore.
+const optStr = z.string().nullish().transform((v) => v ?? '');
+
+const langMap = z
+  .record(z.union([z.string(), z.null(), z.undefined()]))
+  .transform((v) => {
+    const out: Record<string, string> = {};
+    for (const [k, val] of Object.entries(v ?? {})) {
+      if (typeof val === 'string') out[k] = val;
+    }
+    return out;
+  });
+
 const categorySchema = z.object({
   order: z.number(),
   isVisible: z.boolean(),
   isPaid: z.boolean(),
   iapProductId: z.string().nullable().optional(),
   priceRub: z.number().nullable().optional(),
-  title: z.record(z.string()).refine((v) => !!v.ru && v.ru.length > 0, {
+  title: langMap.refine((v) => !!v.ru && v.ru.length > 0, {
     message: 'RU обязателен',
   }),
-  // Разрешаем пустое значение, чтобы можно было засеять Firestore и заполнять медиа постепенно.
-  tabIconAssetPath: z.string().optional(),
-  heroImageAssetPath: z.string().optional(),
-  heroVideoAssetPath: z.string().optional(),
-  backgroundColorHex: z.string().optional(),
+  tabIconAssetPath: optStr,
+  heroImageAssetPath: optStr,
+  heroVideoAssetPath: optStr,
+  backgroundColorHex: optStr,
 });
 
 function CategoriesContent() {
