@@ -9,9 +9,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { StorageFileUpload } from '@/components/StorageFileUpload';
+import { MultiLangInput } from '@/components/MultiLangInput';
 import { getFileUrlFromPathOrUrl } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { AdminShell } from '@/components/AdminShell';
+import { pickLocalized } from '@/lib/languages';
 
 const categorySchema = z.object({
   order: z.number(),
@@ -19,9 +21,8 @@ const categorySchema = z.object({
   isPaid: z.boolean(),
   iapProductId: z.string().nullable().optional(),
   priceRub: z.number().nullable().optional(),
-  title: z.object({
-    ru: z.string().min(1),
-    en: z.string().min(1),
+  title: z.record(z.string()).refine((v) => !!v.ru && v.ru.length > 0, {
+    message: 'RU обязателен',
   }),
   // Разрешаем пустое значение, чтобы можно было засеять Firestore и заполнять медиа постепенно.
   tabIconAssetPath: z.string().optional(),
@@ -142,18 +143,13 @@ function CategoriesContent() {
               {editingId ? 'Редактировать категорию' : 'Новая категория'}
             </h2>
             
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-700">Название (RU)</label>
-                <input {...register('title.ru')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" />
-                {errors.title?.ru && <p className="text-red-500 text-sm">{errors.title.ru.message}</p>}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-700">Название (EN)</label>
-                <input {...register('title.en')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" />
-                {errors.title?.en && <p className="text-red-500 text-sm">{errors.title.en.message}</p>}
-              </div>
-            </div>
+            <MultiLangInput
+              label="Название категории"
+              value={watch('title') as Record<string, string>}
+              onChange={(next) => setValue('title', next as any, { shouldValidate: true })}
+              placeholder="Питомцы"
+            />
+            {errors.title && <p className="mt-1 text-red-500 text-sm">{(errors.title as any)?.message || 'Заполни хотя бы RU'}</p>}
 
             <div className="mt-5 grid gap-5 xl:grid-cols-2">
               <StorageFileUpload
@@ -264,7 +260,7 @@ function CategoriesContent() {
                     {category.tabIconAssetPath ? (
                       <img
                         src={getFileUrlFromPathOrUrl(category.tabIconAssetPath)}
-                        alt={category.title.ru}
+                        alt={pickLocalized(category.title, "ru")}
                         className="h-14 w-14 rounded-2xl border border-slate-200 bg-white object-contain p-2"
                       />
                     ) : (
@@ -274,8 +270,8 @@ function CategoriesContent() {
                       />
                     )}
                     <div>
-                      <div className="font-black text-slate-900">{category.title.ru}</div>
-                      <div className="text-sm text-slate-500">{category.title.en}</div>
+                      <div className="font-black text-slate-900">{pickLocalized(category.title, "ru")}</div>
+                      <div className="text-sm text-slate-500">{pickLocalized(category.title, "en")}</div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">

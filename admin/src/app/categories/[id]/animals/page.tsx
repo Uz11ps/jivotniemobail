@@ -10,28 +10,25 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { StorageFileUpload } from '@/components/StorageFileUpload';
+import { MultiLangInput } from '@/components/MultiLangInput';
+import { MultiLangAudioUpload } from '@/components/MultiLangAudioUpload';
 import { getFileUrlFromPathOrUrl } from '@/lib/storage';
 import { AdminShell } from '@/components/AdminShell';
+import { pickLocalized } from '@/lib/languages';
 
 const animalSchema = z.object({
   order: z.number(),
   isVisible: z.boolean(),
-  name: z.object({
-    ru: z.string().min(1),
-    en: z.string().min(1),
+  // Multilang strings: validated as objects with at least ru filled.
+  name: z.record(z.string()).refine((v) => !!v.ru && v.ru.length > 0, {
+    message: 'RU обязателен',
   }),
-  topText: z.object({
-    ru: z.string().min(1),
-    en: z.string().min(1),
-  }),
+  topText: z.record(z.string()).optional(),
   // Разрешаем пустые значения, чтобы можно было постепенно докидывать медиа.
   previewAssetPath: z.string().optional(), // иконка в сетке
   bgVideoAssetPath: z.string().optional(), // mp4 фон
   bgAssetPath: z.string().optional(), // опциональный фолбэк-картинка
-  voiceAssetPath: z.object({
-    ru: z.string().optional(),
-    en: z.string().optional(),
-  }).optional(),
+  voiceAssetPath: z.record(z.string()).optional(), // голос на каждый язык
   soundAssetPath: z.string().optional(), // аудио животного
   animationAssetPath: z.string().optional(),
   animationVideoAssetPath: z.string().optional(),
@@ -54,9 +51,9 @@ function AnimalsContent() {
     defaultValues: {
       order: animals.length,
       isVisible: true,
-      name: { ru: '', en: '' },
+      name: { ru: '', en: '' } as any,
       previewAssetPath: '',
-      topText: { ru: '', en: '' },
+      topText: { ru: '', en: '' } as any,
       bgVideoAssetPath: '',
       soundAssetPath: '',
     },
@@ -127,8 +124,8 @@ function AnimalsContent() {
             reset({
               order: animals.length,
               isVisible: true,
-              name: { ru: '', en: '' },
-              topText: { ru: '', en: '' },
+              name: { ru: '', en: '' } as any,
+              topText: { ru: '', en: '' } as any,
               previewAssetPath: '',
               bgVideoAssetPath: '',
               soundAssetPath: '',
@@ -181,18 +178,13 @@ function AnimalsContent() {
               {editingId ? 'Редактировать животное' : 'Новое животное'}
             </h2>
             
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-700">Название (RU)</label>
-                <input {...register('name.ru')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" />
-                {errors.name?.ru && <p className="text-red-500 text-sm">{errors.name.ru.message}</p>}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-700">Название (EN)</label>
-                <input {...register('name.en')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" />
-                {errors.name?.en && <p className="text-red-500 text-sm">{errors.name.en.message}</p>}
-              </div>
-            </div>
+            <MultiLangInput
+              label="Название животного"
+              value={watch('name') as Record<string, string>}
+              onChange={(next) => setValue('name', next as any, { shouldValidate: true })}
+              placeholder="Кот"
+            />
+            {errors.name && <p className="mt-1 text-red-500 text-sm">{(errors.name as any)?.message || 'Заполни хотя бы RU'}</p>}
 
             <div className="mt-5">
               <StorageFileUpload
@@ -205,18 +197,12 @@ function AnimalsContent() {
             </div>
 
             <div className="mt-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-slate-700">Текст сверху (RU)</label>
-                  <input {...register('topText.ru')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" placeholder="Кот/кошка" />
-                  {errors.topText?.ru && <p className="text-red-500 text-sm">{errors.topText.ru.message}</p>}
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-slate-700">Текст сверху (EN)</label>
-                  <input {...register('topText.en')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/60" placeholder="Cat" />
-                  {errors.topText?.en && <p className="text-red-500 text-sm">{errors.topText.en.message}</p>}
-                </div>
-              </div>
+              <MultiLangInput
+                label="Текст сверху (опционально)"
+                value={watch('topText') as Record<string, string>}
+                onChange={(next) => setValue('topText', next as any)}
+                placeholder="Кот/кошка"
+              />
             </div>
 
             <div className="mt-5 grid gap-5 xl:grid-cols-2">
@@ -246,20 +232,12 @@ function AnimalsContent() {
               />
             </div>
 
-            <div className="mt-5 grid gap-5 xl:grid-cols-2">
-              <StorageFileUpload
-                path={`animals/voices/${Date.now()}-ru.mp3`}
-                value={watch('voiceAssetPath')?.ru}
-                onUploaded={(meta) => setValue('voiceAssetPath.ru', meta.url)}
-                accept="audio/*"
-                label="Голос (RU) - опционально"
-              />
-              <StorageFileUpload
-                path={`animals/voices/${Date.now()}-en.mp3`}
-                value={watch('voiceAssetPath')?.en}
-                onUploaded={(meta) => setValue('voiceAssetPath.en', meta.url)}
-                accept="audio/*"
-                label="Голос (EN) - опционально"
+            <div className="mt-5">
+              <MultiLangAudioUpload
+                label="Озвучка названия (15 языков)"
+                basePath={`animals/voices/${editingId || 'new'}`}
+                value={watch('voiceAssetPath') as Record<string, string>}
+                onChange={(next) => setValue('voiceAssetPath', next as any)}
               />
             </div>
 
@@ -317,13 +295,13 @@ function AnimalsContent() {
                   {animal.previewAssetPath && (
                     <img
                       src={getFileUrlFromPathOrUrl(animal.previewAssetPath)}
-                      alt={animal.name.ru}
+                      alt={pickLocalized(animal.name, "ru")}
                       className="h-16 w-16 rounded-2xl border border-slate-200 bg-white object-contain p-2"
                     />
                   )}
                     <div>
-                      <div className="font-black text-slate-900">{animal.name.ru}</div>
-                      <div className="text-sm text-slate-500">{animal.name.en}</div>
+                      <div className="font-black text-slate-900">{pickLocalized(animal.name, "ru")}</div>
+                      <div className="text-sm text-slate-500">{pickLocalized(animal.name, "en")}</div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">

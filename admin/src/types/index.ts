@@ -1,6 +1,20 @@
+/**
+ * Multi-language string. Keys are ISO 639-1 codes (ru, en, es, …).
+ * `ru` and `en` are always present (for back-compat with existing code/data),
+ * additional languages are optional and added per `lib/languages.ts`.
+ */
 export interface LocalizedString {
   ru: string;
   en: string;
+  [lang: string]: string | undefined;
+}
+
+/**
+ * Per-language audio assets. Same shape as LocalizedString — Storage paths
+ * (or legacy URLs) keyed by ISO 639-1 code.
+ */
+export interface LocalizedAssetMap {
+  [lang: string]: string | undefined;
 }
 
 export interface Category {
@@ -30,10 +44,7 @@ export interface Animal {
   bgAssetPath: string;
   bgVideoAssetPath?: string; // mp4 фон (Storage path или legacy url)
   previewAssetPath: string;
-  voiceAssetPath?: {
-    ru?: string;
-    en?: string;
-  };
+  voiceAssetPath?: LocalizedAssetMap;
   soundAssetPath: string;
   animationAssetPath?: string;
   animationVideoAssetPath?: string;
