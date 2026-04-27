@@ -52,10 +52,23 @@ function CategoriesContent() {
     },
   });
 
+  const [saveStatus, setSaveStatus] = useState<{ kind: 'idle' | 'saving' | 'ok' | 'error'; message?: string }>({ kind: 'idle' });
+
   const onSubmit = async (data: Category) => {
+    setSaveStatus({ kind: 'saving' });
     try {
+      // Strip undefined map values — Firestore Admin SDK rejects them.
+      const cleanMap = (m: Record<string, string | undefined> | undefined) => {
+        if (!m) return undefined;
+        const out: Record<string, string> = {};
+        for (const [k, v] of Object.entries(m)) {
+          if (typeof v === 'string') out[k] = v;
+        }
+        return out;
+      };
       const payload: Category = {
         ...data,
+        title: (cleanMap(data.title as any) || {}) as Category['title'],
         tabIconAssetPath: data.tabIconAssetPath || '',
         heroImageAssetPath: data.heroImageAssetPath || '',
         heroVideoAssetPath: data.heroVideoAssetPath || '',
@@ -69,9 +82,31 @@ function CategoriesContent() {
         setShowForm(false);
       }
       reset();
+      setSaveStatus({ kind: 'ok', message: 'Сохранено' });
+      setTimeout(() => setSaveStatus({ kind: 'idle' }), 2500);
     } catch (error) {
-      console.error('Ошибка сохранения:', error);
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('Ошибка сохранения категории:', msg, error);
+      setSaveStatus({ kind: 'error', message: msg });
     }
+  };
+
+  const onInvalid = (errs: any) => {
+    const list: string[] = [];
+    const walk = (obj: any, prefix = '') => {
+      if (!obj || typeof obj !== 'object') return;
+      for (const [k, v] of Object.entries(obj)) {
+        if (v && typeof v === 'object') {
+          if ((v as any).message) list.push(`${prefix}${k}: ${(v as any).message}`);
+          else walk(v, `${prefix}${k}.`);
+        }
+      }
+    };
+    walk(errs);
+    setSaveStatus({
+      kind: 'error',
+      message: list.length ? `Не прошла валидация:\n${list.join('\n')}` : 'Не прошла валидация формы',
+    });
   };
 
   const handleReorder = async (newOrder: Category[]) => {
@@ -131,7 +166,7 @@ function CategoriesContent() {
 
         {(showForm || editingId) ? (
           <form
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit, onInvalid)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
                 e.preventDefault();
@@ -230,9 +265,28 @@ function CategoriesContent() {
               </label>
             </div>
 
+            {saveStatus.kind !== 'idle' && (
+              <div
+                className={[
+                  'mt-5 whitespace-pre-line rounded-2xl border p-4 text-sm font-semibold',
+                  saveStatus.kind === 'ok' && 'border-emerald-200 bg-emerald-50 text-emerald-900',
+                  saveStatus.kind === 'error' && 'border-red-200 bg-red-50 text-red-900',
+                  saveStatus.kind === 'saving' && 'border-blue-200 bg-blue-50 text-blue-900',
+                ].filter(Boolean).join(' ')}
+              >
+                {saveStatus.kind === 'saving' && 'Сохраняем…'}
+                {saveStatus.kind === 'ok' && (saveStatus.message || 'Сохранено')}
+                {saveStatus.kind === 'error' && `❌ ${saveStatus.message || 'Не удалось сохранить'}`}
+              </div>
+            )}
+
             <div className="mt-6 flex gap-3">
-              <button type="submit" className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700">
-                Сохранить
+              <button
+                type="submit"
+                disabled={saveStatus.kind === 'saving'}
+                className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700 disabled:opacity-60"
+              >
+                {saveStatus.kind === 'saving' ? 'Сохраняем…' : 'Сохранить'}
               </button>
               <button
                 type="button"
@@ -240,6 +294,7 @@ function CategoriesContent() {
                   setShowForm(false);
                   setEditingId(null);
                   reset();
+                  setSaveStatus({ kind: 'idle' });
                 }}
                 className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
               >
